@@ -38,11 +38,6 @@ resource "helm_release" "traefik" {
 
 }
 
-
-
-
-
-
 resource "helm_release" "external_dns" {
 
   name             = "external-dns"
@@ -218,8 +213,6 @@ resource "helm_release"  "keda" {
   ]
   
 }
-
-
 
 
 #resource "helm_release" "aws_load_balancer_controller" {

@@ -99,10 +99,7 @@ jobs:
       - name: push docker image
         run: |
               docker push \
-              499024813019.dkr.ecr.eu-west-2.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \
-            
-
-          
+              499024813019.dkr.ecr.eu-west-2.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \       
 
   update-manifests:
     needs:

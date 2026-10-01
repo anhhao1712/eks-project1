@@ -131,9 +131,6 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: "postgres-secret-provider"
-
-        
-
      
   volumeClaimTemplates:
      - metadata: 

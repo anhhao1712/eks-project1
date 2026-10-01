@@ -58,10 +58,6 @@ module "irsa" {
   aws_eks_cluster                                  = module.eks.aws_eks_cluster
   eks_oidc_issuer_url                              = module.eks.aws_eks_cluster_eks_cluster_identity_oidc_issuer
 
-
-
-
-
 }
 
 module "networking" {
