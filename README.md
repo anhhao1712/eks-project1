@@ -310,34 +310,31 @@ To further improve this project I could implement database management services s
 
 ## Security Measures Implemented
 
-- GitHub Actions OIDC — Used short-lived AWS credentials instead of storing long-lived AWS access keys in GitHub.
+- GitHub Actions OIDC: Used short-lived AWS credentials instead of storing long-lived AWS access keys in GitHub.
   
-- IAM Roles for Service Accounts (IRSA) — Kubernetes workloads such as ExternalDNS, the EBS CSI Driver, KEDA and other AWS-integrated components receive AWS permissions through dedicated IAM roles rather than shared credentials.
+- IAM Roles for Service Accounts (IRSA): Kubernetes workloads such as ExternalDNS, the EBS CSI Driver, KEDA and other AWS-integrated components receive AWS permissions through dedicated IAM roles rather than shared credentials.
   
-- Least-privilege IAM policies — IAM roles were restricted to the AWS actions and resources required by each component, reducing the impact of a compromised workload.
+- Least-privilege IAM policies: IAM roles were restricted to the AWS actions and resources required by each component, reducing the impact of a compromised workload.
   
-- AWS Secrets Manager — Database credentials and other sensitive values were kept outside application code and Kubernetes manifests.
+- AWS Secrets Manager: Database credentials and other sensitive values were kept outside application code and Kubernetes manifests.
   
-- Secrets Store CSI Driver + AWS Provider — Secrets were securely retrieved from Secrets Manager and delivered to Kubernetes workloads rather than being hardcoded into deployment files.
+- Secrets Store CSI Driver + AWS Provider: Secrets were securely retrieved from Secrets Manager and delivered to Kubernetes workloads rather than being hardcoded into deployment files.
   
-- Private worker nodes — EKS worker nodes and application workloads were placed in private subnets rather than being directly exposed to the Internet.
+- Private worker nodes: EKS worker nodes and application workloads were placed in private subnets rather than being directly exposed to the Internet.
   
-- Security Groups — Network access between the EKS control plane and worker nodes was restricted to required communication, including ports such as 443, 10250, 9402, and 9443.
+- Security Groups: Network access between the EKS control plane and worker nodes was restricted to required communication, including ports such as 443, 10250, 9402, and 9443.
   
-- Secure container configuration — Workloads used controls such as runAsNonRoot, dropped Linux capabilities, allowPrivilegeEscalation: false, seccomp: RuntimeDefault, and read-only root filesystems where applicable.
+- Secure container configuration: Workloads used controls such as runAsNonRoot, dropped Linux capabilities, allowPrivilegeEscalation: false, seccomp: RuntimeDefault, and read-only root filesystems where applicable.
   
-- Trivy container scanning — Docker images were scanned for HIGH and CRITICAL vulnerabilities before being pushed/deployed, allowing insecure builds to fail the pipeline.
+- Trivy container scanning: Docker images were scanned for HIGH and CRITICAL vulnerabilities before being pushed/deployed, allowing insecure builds to fail the pipeline.
   
-- Checkov security scanning — Terraform and Kubernetes configurations were statically analysed for security and configuration problems before deployment.
+- Checkov security scanning: Terraform and Kubernetes configurations were statically analysed for security and configuration problems before deployment.
 TLS/HTTPS — Traefik and cert-manager were used to provide encrypted HTTPS access to externally exposed application endpoints.
 
-- Encrypted EBS storage — Persistent PostgreSQL and Redis data used encrypted EBS-backed storage.
+- Encrypted EBS storage: Persistent PostgreSQL and Redis data used encrypted EBS-backed storage.
   
-- VPC Flow Logs — Network traffic metadata was captured for monitoring and auditing, with the CloudWatch log group protected using KMS encryption.
+- VPC Flow Logs: Network traffic metadata was captured for monitoring and auditing, with the CloudWatch log group protected using KMS encryption.
   
-- Private/public subnet separation — Internet-facing infrastructure such as the load balancer was separated from application worker nodes and workloads running in private subnets.
+- Private/public subnet separation: Internet-facing infrastructure such as the load balancer was separated from application worker nodes and workloads running in private subnets.
   
-- Automated deployment gates — Failed tests or security scans prevented the deployment pipeline from progressing, reducing the chance of vulnerable or broken application versions reaching the cluster.
-    
-
-    
+- Automated deployment gates: Failed tests or security scans prevented the deployment pipeline from progressing, reducing the chance of vulnerable or broken application versions reaching the cluster.
