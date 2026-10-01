@@ -329,7 +329,8 @@ To further improve this project I could implement database management services s
 - Trivy container scanning: Docker images were scanned for HIGH and CRITICAL vulnerabilities before being pushed/deployed, allowing insecure builds to fail the pipeline.
   
 - Checkov security scanning: Terraform and Kubernetes configurations were statically analysed for security and configuration problems before deployment.
-TLS/HTTPS — Traefik and cert-manager were used to provide encrypted HTTPS access to externally exposed application endpoints.
+  
+- TLS/HTTPS: Traefik and cert-manager were used to provide encrypted HTTPS access to externally exposed application endpoints.
 
 - Encrypted EBS storage: Persistent PostgreSQL and Redis data used encrypted EBS-backed storage.
   
