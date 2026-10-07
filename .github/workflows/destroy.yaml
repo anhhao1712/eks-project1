@@ -1,70 +1,20 @@
-name: destroy pipeline
+name: destroy pipeline - paused
 
-run-name:  Destroy pipeline triggered by ${{ github.actor }}
+run-name: Terraform destroy is paused for Learner Lab
 
 on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  terraform-destroy:
+  explain-paused-destroy:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 2
     steps:
-
-      - name: checkout code
-        uses: actions/checkout@v4
-
-      - name: configure Aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::499024813019:role/githubs-action-destroypipeline
-          aws-region: eu-west-2
-
-      - name: setup terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: 1.10.0
-
-      - name: Terraform init
-        working-directory: terraform
-        run: terraform init
-
-      - name: terraform destroy plan
-        working-directory: terraform
-
-        env:
-                TF_VAR_aws_key_arn: ${{ secrets.AWS_KEY_ARN }}
-                TF_VAR_aws_key_ecr_arn: ${{ secrets.AWS_SECRET_KEY }}
-                TF_VAR_cloudwatch_key_arn: ${{ secrets.CLOUDWATCH_KEY_ARN }}
-                TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-                TF_VAR_eks_role_arn: ${{ secrets.EKS_ROLE_ARN }}
-                TF_VAR_flow_log_role_arn: ${{ secrets.FLOW_LOG_ROLE_ARN }}
-                TF_VAR_aws_iam_role_node_group_role_arn: ${{ secrets.AWS_IAM_ROLE_NODE_GROUP_ROLE_ARN }}
-                TF_VAR_database_url: ${{ secrets.TF_VAR_DATABASE_URL }}
-                
-        run: terraform plan -destroy -out=destroy.tfplan
-
-      - name: Apply Terraform destroy plan
-        working-directory: terraform
-        run: terraform apply -auto-approve destroy.tfplan
-
-      - name: Verify Terraform state is empty
-        working-directory: terraform
+      - name: Explain why destroy is unavailable
         run: |
-             state_list=$(terraform state list)
-
-             if [ -n "$state_list" ]; then
-               echo "there are still resources in this terraform state:"
-               echo "$state_list"
-               exit 1
-
-             fi
-
-              echo "Terraform state is empty."
-
-
-      
+          echo "::error::Terraform destruction is paused. The current EKS infrastructure was created through AWS Console and has not been imported into this Terraform state."
+          echo "No AWS authentication or resource deletion was performed." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
