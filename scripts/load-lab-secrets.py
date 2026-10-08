@@ -1,9 +1,11 @@
-"""Run in CloudShell. Secret values travel over stdin, never command arguments/files."""
+"""Run in CloudShell. AWS JSON uses private temporary files; kubectl uses stdin."""
 import base64
 import json
+import os
 import secrets
 import subprocess
 import sys
+import tempfile
 from urllib.parse import quote
 
 REGION = "us-east-1"
@@ -19,7 +21,20 @@ def run(args, payload=None):
 
 
 def aws(*args, payload=None):
-    return json.loads(run(["aws", *args, "--region", REGION, "--output", "json", "--no-cli-pager"], payload))
+    command = ["aws", *args, "--region", REGION, "--output", "json", "--no-cli-pager"]
+    if payload is None:
+        return json.loads(run(command))
+    # AWS CLI may read a parameter file more than once; stdin cannot be reread.
+    json.loads(payload)
+    fd, path = tempfile.mkstemp(prefix="eks-lab-secret-", suffix=".json")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(payload)
+        index = command.index("--cli-input-json") + 1
+        command[index] = "file://" + path.replace("\\", "/")
+        return json.loads(run(command))
+    finally:
+        os.unlink(path)
 
 
 def apply(document):
