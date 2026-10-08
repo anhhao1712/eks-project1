@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - dashboard.ecommerce.zakariyaalab.com
+      - dashboard.ecommerce.example.invalid
     secretName: dashboard-ingress-tls
   rules:
-  - host: "dashboard.ecommerce.zakariyaalab.com"
+  - host: "dashboard.ecommerce.example.invalid"
     http:
       paths:
       - pathType: Prefix

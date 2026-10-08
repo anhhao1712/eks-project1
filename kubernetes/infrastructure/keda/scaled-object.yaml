@@ -18,8 +18,8 @@ spec:
     - type: aws-sqs-queue
 
       metadata:
-        queueURL: https://sqs.eu-west-2.amazonaws.com/499024813019/eks_sqs
-        awsRegion: eu-west-2
+        queueURL: https://sqs.us-east-1.amazonaws.com/425959969184/eks_sqs
+        awsRegion: us-east-1
         queueLength: "5"
 
       authenticationRef:

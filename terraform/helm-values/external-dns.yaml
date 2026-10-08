@@ -2,15 +2,15 @@ provider: aws
 
 env:
 - name: AWS_DEFAULT_REGION
-  value: eu-west-2
+  value: us-east-1
 
 
 serviceAccount:
   create: true
   name: external-dns
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::499024813019:role/external-dns
+    eks.amazonaws.com/role-arn: arn:aws:iam::425959969184:role/external-dns
 
 
 domainFilters:
-- ecommerce.zakariyaalab.com
+- ecommerce.example.invalid

@@ -48,7 +48,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
-          allowed-account-ids: "425959969184"
+          allowed-account-ids: ${{ env.AWS_ACCOUNT_ID }}
       - name: Verify all nine ECR repositories exist
         shell: bash
         run: |
@@ -92,7 +92,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
-          allowed-account-ids: "425959969184"
+          allowed-account-ids: ${{ env.AWS_ACCOUNT_ID }}
       - name: Login to ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2

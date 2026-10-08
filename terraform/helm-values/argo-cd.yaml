@@ -10,8 +10,8 @@ server:
     annotations:
       cert-manager.io/cluster-issuer: issuer
     hosts:
-    - argocd.ecommerce.zakariyaalab.com
+    - argocd.ecommerce.example.invalid
     tls:
     - secretName: argocd-ingress-tls
       hosts:
-      - argocd.ecommerce.zakariyaalab.com   
+      - argocd.ecommerce.example.invalid

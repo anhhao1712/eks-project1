@@ -6,17 +6,17 @@ metadata:
 spec:
   acme:
     server: "https://acme-v02.api.letsencrypt.org/directory"
-    email: "zakariyaa4458@gmail.com"
+    email: "REPLACE_WITH_YOUR_ACME_EMAIL"
     privateKeySecretRef:
       name: issuer
     solvers:
     - dns01:
         route53:
-          hostedZoneID: Z101674438AEID6T19NFK
-          region: eu-west-2
+          hostedZoneID: REPLACE_WITH_YOUR_HOSTED_ZONE_ID
+          region: us-east-1
       selector:
         dnsZones:
-        - "ecommerce.zakariyaalab.com"
+        - "ecommerce.example.invalid"
     - http01:
         ingress:
           class: traefik

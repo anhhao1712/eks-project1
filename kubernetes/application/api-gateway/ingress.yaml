@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - api.ecommerce.zakariyaalab.com
+      - api.ecommerce.example.invalid
     secretName: api-gateway-tls
   rules:
-  - host: "api.ecommerce.zakariyaalab.com"
+  - host: "api.ecommerce.example.invalid"
     http:
       paths:
       - pathType: Prefix
