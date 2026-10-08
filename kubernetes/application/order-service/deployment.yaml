@@ -35,7 +35,7 @@ spec:
       serviceAccountName: order-service-service-account
       containers:
       - name: order-service
-        image: 425959969184.dkr.ecr.us-east-1.amazonaws.com/eks-project1-lab/order-service:cb0fe8318705aa25475d95a25b3ffb74c98ee8c4-37661052690-1
+        image: 425959969184.dkr.ecr.us-east-1.amazonaws.com/eks-project1-lab/order-service:1f1d20d156465ddd7c01cd43d7701c6ba661f957-37816451389-1
         imagePullPolicy: Always
         securityContext:
           runAsNonRoot: true
