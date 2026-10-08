@@ -128,3 +128,8 @@ variable "node_instance_types" {
   type    = list(string)
   default = ["t3.medium"]
 }
+
+variable "force_delete_ecr" {
+  type    = bool
+  default = false
+}

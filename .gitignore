@@ -52,3 +52,4 @@ Thumbs.db
 
 # Python helper cache
 __pycache__/
+.lab-state-bucket

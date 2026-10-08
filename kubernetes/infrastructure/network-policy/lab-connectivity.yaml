@@ -1,6 +1,19 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: public-dashboard
+  namespace: application-namespace
+spec:
+  podSelector:
+    matchLabels: {app: dashboard-api}
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - {protocol: TCP, port: 8086}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: application-egress
   namespace: application-namespace
 spec:

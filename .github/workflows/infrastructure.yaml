@@ -1,44 +1,38 @@
-name: infrastructure checks
-
-run-name: Infrastructure checks triggered by ${{ github.actor }}
-
+name: deploy infrastructure
+run-name: Deploy Learner Lab infrastructure by ${{ github.actor }}
 on:
-  push:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - ".github/workflows/infrastructure.yaml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - ".github/workflows/infrastructure.yaml"
   workflow_dispatch:
-
+    inputs:
+      stage:
+        description: Terraform stage
+        required: true
+        type: choice
+        default: all
+        options: [all, infra, platform, refresh]
 permissions:
   contents: read
-
 concurrency:
-  group: infrastructure-checks-${{ github.ref }}
-  cancel-in-progress: true
-
+  group: learner-lab-terraform
+  cancel-in-progress: false
 jobs:
-  terraform-check:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: terraform
+    timeout-minutes: 90
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v4
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.10.0"
-      - name: Check Terraform formatting
-        run: terraform fmt -check -recursive
-      - name: Initialize for validation
-        run: terraform init -backend=false -input=false
-      - name: Validate Terraform configuration
-        run: terraform validate -no-color
+          terraform_version: '1.13.5'
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+          allowed-account-ids: '425959969184'
+      - name: Apply Terraform stages
+        env:
+          DEPLOY_STAGE: ${{ inputs.stage }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: bash scripts/deploy-lab.sh "$DEPLOY_STAGE"

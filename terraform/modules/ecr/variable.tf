@@ -15,3 +15,8 @@ variable "aws_key_ecr_arn" {
   type = string
 
 }
+
+variable "force_delete" {
+  type    = bool
+  default = false
+}

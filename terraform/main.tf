@@ -24,7 +24,8 @@ module "eks" {
 }
 
 module "ecr" {
-  region = var.region
+  force_delete = var.force_delete_ecr
+  region       = var.region
   #checkov:skip=CKV_AWS_1: these are local modules
   source          = "./modules/ecr"
   app_ecr_repo    = var.app_ecr_repo

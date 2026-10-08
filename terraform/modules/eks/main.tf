@@ -1,4 +1,10 @@
+resource "aws_cloudwatch_log_group" "eks" {
+  name              = "/aws/eks/eks-cluster/cluster"
+  retention_in_days = 30
+}
+
 resource "aws_eks_cluster" "eks-cluster" {
+  depends_on = [aws_cloudwatch_log_group.eks]
   #checkov:skip=CKV_AWS_39: using home Ip address 
   region = var.region
   name   = "eks-cluster"

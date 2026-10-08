@@ -1,20 +1,30 @@
-name: destroy pipeline - paused
-
-run-name: Terraform destroy is paused for Learner Lab
-
+name: destroy infrastructure
+run-name: Destroy Learner Lab project by ${{ github.actor }}
 on:
   workflow_dispatch:
-
 permissions:
   contents: read
-
+concurrency:
+  group: learner-lab-terraform
+  cancel-in-progress: false
 jobs:
-  explain-paused-destroy:
+  destroy:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 90
     steps:
-      - name: Explain why destroy is unavailable
-        run: |
-          echo "::error::Terraform destruction is paused. The current EKS infrastructure was created through AWS Console and has not been imported into this Terraform state."
-          echo "No AWS authentication or resource deletion was performed." >> "$GITHUB_STEP_SUMMARY"
-          exit 1
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: '1.13.5'
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+          allowed-account-ids: '425959969184'
+      - name: Delete workloads, volumes, platform and AWS infrastructure
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: bash scripts/deploy-lab.sh destroy

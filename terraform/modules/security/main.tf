@@ -127,7 +127,8 @@ resource "aws_cloudwatch_log_group" "flow_log_group" {
 }
 
 resource "aws_secretsmanager_secret" "database_url" {
-  name = "database_url"
+  name                    = "database_url"
+  recovery_window_in_days = 0
 
 }
 
