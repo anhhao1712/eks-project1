@@ -1,6 +1,6 @@
 # Deploy theo từng bước trong CloudShell
 
-Trạng thái: cấu hình tạo hạ tầng đã chuyển sang LabRole; chưa tạo tài nguyên AWS. Ứng dụng gốc vẫn cần giải quyết IRSA, CSI, secrets và NetworkPolicy trước khi sync.
+Cấu hình hạ tầng dùng LabRole. Manifest ứng dụng đã điều chỉnh cho phiên Learner Lab; secrets được nạp bởi CloudShell thay cho IRSA/Secrets Store CSI. Chưa kiểm chứng toàn bộ ứng dụng trên AWS.
 
 ## Đọc để hiểu luồng
 
@@ -98,27 +98,74 @@ kubectl rollout status deployment/argocd-server -n argo-cd --timeout=300s
 
 Đây là bước cài bộ điều khiển, chưa deploy application. Với repo private, cấu hình repository credential trong Argo CD trước khi đồng bộ.
 
-## 5. Điều kiện để deploy ứng dụng gốc
+## 5. Secrets và deploy ứng dụng sau khi EBS đã được kiểm tra
 
-Chưa chạy `kubectl apply -f kubernetes/argocd/root-app.yaml`: root và các child app tự sync, nên sẽ tạo ngay các resource chưa sẵn sàng.
+Manifest đã bỏ Secrets Store CSI mounts và annotation IRSA chưa tồn tại. Vẫn giữ StatefulSet/PVC EBS và replica gốc. Secrets Manager vẫn lưu mật khẩu; CloudShell nạp vào Kubernetes Secret bằng script. Credentials SQS dùng phiên Lab tạm, cần cập nhật khi hết hạn.
 
-- Các service account vẫn trỏ tới role riêng của tác giả đã đổi account, nhưng role chưa tồn tại. LabRole không có trust IRSA. Cần quyết định cơ chế cấp quyền được Lab hỗ trợ; không tự thay mọi annotation sang LabRole.
-- PostgreSQL cần Secrets Store CSI + AWS provider + quyền đọc secret; EBS PVC cần EBS CSI + quyền AWS. Không thay PVC bằng dữ liệu tạm.
-- Manifest tham chiếu application-secret-sqs nhưng repo chưa có resource tạo secret này.
-- REDIS_URL mà gateway đọc cần khớp ConfigMap/env hiện tại.
-- NetworkPolicy default-deny cần bổ sung egress đúng cho DNS/database/AWS; policy worker bị trùng tên và policy database sai namespace cần sửa.
-- Chưa có domain: ingress/ACME/DNS placeholder không hoạt động. Dùng port-forward từ máy có kubeconfig để thử trước; chưa bật DNS/cert automation.
+Trên máy bạn: commit/push các sửa đổi mới, chạy lại app-cd pipeline vì dashboard có proxy cùng origin và frontend dùng URL tương đối. Chờ workflow xanh trước khi deploy.
 
-Sau khi các điều kiện được xử lý, từ thư mục gốc repo chạy:
+Trong CloudShell:
 
 ```bash
-kubectl apply -f kubernetes/argocd/root-app.yaml
-kubectl get applications -n argo-cd
-kubectl get pods -A
-kubectl get pvc -A
+cd ~/eks-deploy
+git pull --ff-only
+python3 scripts/load-lab-secrets.py
 ```
 
-Chỉ bootstrap root-app, không bootstrap thêm argocd-app.yaml. Argo lần lượt nhận infrastructure/database/application từ Git. Kiểm tra PVC Bound, Pod Ready và Argo Synced/Healthy; debug bằng describe và logs khi chưa đạt.
+Script kiểm tra account/context, lấy queue URL, đọc eks/postgres (tạo mật khẩu ngẫu nhiên nếu secret chưa có và chưa tồn tại PVC PostgreSQL), ghi database_url vào Secrets Manager rồi tạo ba Kubernetes Secrets. Không in mật khẩu/credentials. Nếu AccessDenied, dừng; script chưa được chạy trên AWS từ máy Codex.
+
+```bash
+kubectl apply -f kubernetes/infrastructure/namespaces/
+kubectl apply -f kubernetes/infrastructure/priority-class.yaml
+kubectl apply -f kubernetes/argocd/root-app.yaml
+kubectl get applications -n argo-cd
+kubectl get pvc -n database-ns
+kubectl get pods -n database-ns
+kubectl get pods -n application-namespace
+```
+
+Argo tự sync; đợi vài phút và chạy lại lệnh kiểm tra. Mục tiêu PVC Bound, Pod Ready, Argo Synced/Healthy. Root app loại khỏi sync các resource cần domain/ACME, Karpenter/KEDA, snapshot controller, Secrets Store CSI và ingress chưa cài controller. NetworkPolicy đã bổ sung kết nối DNS, nội bộ và HTTPS ra AWS. Sync wave sắp xếp các child Application, startup probe cho phép service chờ DB; không bảo đảm DB Ready trước mọi app.
+
+Khi lỗi:
+
+```bash
+kubectl get events -n application-namespace --sort-by=.lastTimestamp
+kubectl get events -n database-ns --sort-by=.lastTimestamp
+```
+
+Lấy logs/describe của Pod lỗi. Không xóa PVC để thử lại vì sẽ mất dữ liệu.
+
+### Mở dashboard trên máy Windows
+
+CloudShell không mở được port-forward ra trình duyệt máy bạn. Cài AWS CLI v2 trên Windows từ trang AWS; kubectl đã có trên máy. Trong PowerShell tại repo:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-lab-dashboard.ps1
+```
+
+Script hỏi ba credentials phiên Lab (ẩn khi nhập), cập nhật kubeconfig và mở port-forward. Mở http://localhost:8086, giữ terminal chạy. Frontend gọi API cùng địa chỉ; dashboard chuyển /auth và /api đến gateway, không cần domain. Chỉ dùng cho học Lab; cơ chế login gốc chấp nhận thông tin tùy ý.
+
+### Khi phiên Lab hết hạn
+
+Trong CloudShell của phiên mới:
+
+```bash
+cd ~/eks-deploy
+python3 scripts/load-lab-secrets.py
+kubectl rollout restart deployment/order-service-deployment deployment/payment-service-deployment deployment/shipping-service-deployment deployment/worker-deployment -n application-namespace
+```
+
+Cập nhật ba GitHub secrets trước lần build tiếp theo. Chạy lại script mở dashboard ở máy Windows với credentials mới. Mật khẩu PostgreSQL giữ nguyên, script không tự xoay mật khẩu DB.
+
+### EBS controller dùng credentials node
+
+Đã kiểm chứng trên cluster: controller hostNetwork=true chạy 6/6; PVC thử Bound và ghi được EBS_OK. Giữ hop limit=1 ở launch template. Patch trực tiếp có thể bị ghi đè khi cập nhật add-on; nếu xảy ra, áp dụng lại:
+
+```bash
+kubectl patch deployment ebs-csi-controller -n kube-system --type=merge -p '{"spec":{"template":{"spec":{"hostNetwork":true,"dnsPolicy":"ClusterFirstWithHostNet"}}}}'
+```
+
+Không tạo thêm bản EBS CSI qua Helm khi đang dùng managed add-on.
 
 ## Dọn tài nguyên
 

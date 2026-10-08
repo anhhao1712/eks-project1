@@ -49,3 +49,6 @@ Thumbs.db
 *.pem
 
 
+
+# Python helper cache
+__pycache__/

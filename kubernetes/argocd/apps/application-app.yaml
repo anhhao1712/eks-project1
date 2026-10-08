@@ -3,24 +3,23 @@ kind: Application
 metadata:
   name: application
   namespace: argo-cd
-
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
 spec:
   project: default
-
   source:
     repoURL: https://github.com/anhhao1712/eks-project1.git
     targetRevision: main
     path: kubernetes/application
     directory:
       recurse: true
-
+      exclude: '**/ingress.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: application-namespace
-
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true

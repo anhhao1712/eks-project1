@@ -69,3 +69,8 @@ spec:
             port: 8090
           initialDelaySeconds: 130
           periodSeconds: 10
+        startupProbe:
+          tcpSocket:
+            port: 8090
+          periodSeconds: 5
+          failureThreshold: 60
