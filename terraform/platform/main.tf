@@ -61,10 +61,14 @@ resource "helm_release" "ebs" {
   version    = "2.65.1"
   timeout    = 600
   values = [yamlencode({ controller = {
-    hostNetwork = true
-    dnsPolicy   = "ClusterFirstWithHostNet"
-    env         = [{ name = "AWS_REGION", value = "us-east-1" }]
+    region = "us-east-1"
   } })]
+  # This chart has no controller hostNetwork value. Patch the rendered Pod spec
+  # so the controller can use LabRole through the node's IMDS endpoint.
+  postrender = {
+    binary_path = "python3"
+    args        = [abspath("${path.module}/ebs-postrender.py")]
+  }
 }
 
 resource "helm_release" "argocd" {

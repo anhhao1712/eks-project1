@@ -70,7 +70,9 @@ apply_infra() {
   if [[ -n "$task_deleted" && "$task_deleted" != None ]]; then
     aws secretsmanager restore-secret --secret-id database_url >/dev/null
     if ! terraform -chdir="$TASK_ROOT/terraform" state list | grep -Fxq 'module.security.aws_secretsmanager_secret.database_url'; then
-      terraform -chdir="$TASK_ROOT/terraform" import -var-file=learner-lab.tfvars module.security.aws_secretsmanager_secret.database_url database_url
+      local task_secret_arn
+      task_secret_arn="$(aws secretsmanager describe-secret --secret-id database_url --query ARN --output text)"
+      terraform -chdir="$TASK_ROOT/terraform" import -var-file=learner-lab.tfvars module.security.aws_secretsmanager_secret.database_url "$task_secret_arn"
     fi
   fi
   terraform -chdir="$TASK_ROOT/terraform" apply -input=false -auto-approve -var-file=learner-lab.tfvars
