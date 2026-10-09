@@ -39,7 +39,11 @@ Sau đó vẫn phải chạy app-cd pipeline để đưa image vào ECR. Đến 
 
 ## Chạy bằng GitHub Actions
 
+Quy trình không cần lệnh CloudShell nằm trong [HUONG-DAN-GITHUB-ACTIONS.txt](HUONG-DAN-GITHUB-ACTIONS.txt): bật workflow, cập nhật ba secrets, dùng đúng TF_STATE_BUCKET rồi chạy infra → app-cd → platform. Runner tự chuẩn bị Terraform, kubectl và Python, kiểm tra danh tính voclabs; Summary hiển thị URL dashboard. Các workflow infra/app-cd/destroy dùng chung concurrency để tránh build/deploy/xóa đồng thời.
+
 Workflow deploy infrastructure đã được chuyển từ validate-only sang apply thủ công. Có thể dùng các stage infra/platform/all/refresh. Workflow destroy infrastructure gọi cùng script dọn workload/EBS trước Terraform destroy.
+
+Stage all tạo AWS và platform, không build image. Destroy có lựa chọn delete_state_bucket để xóa thêm bucket chuyên dụng và lịch sử state; mặc định giữ bucket. Trạng thái Disabled phải bật bằng Enable workflow trên GitHub.
 
 Nếu dùng bucket khác tên mặc định, đặt repository variable TF_STATE_BUCKET bằng tên trong .lab-state-bucket (CloudShell). CloudShell và Actions phải dùng cùng bucket; không dùng hai state khác nhau cho cùng cluster.
 

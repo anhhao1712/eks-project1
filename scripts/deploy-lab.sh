@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CloudShell entry point. No plaintext credential files and no set -x.
+# CloudShell/GitHub Actions entry point. No plaintext credential files or set -x.
 set -euo pipefail
 TASK_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 AWS_PAGER=""
@@ -61,6 +61,11 @@ platform_init() {
   mkdir -p "$TF_DATA_DIR"
   terraform -chdir="$TASK_ROOT/terraform/platform" init -input=false -reconfigure -backend-config="bucket=$STATE_BUCKET"
   aws eks update-kubeconfig --name eks-cluster --region us-east-1 >/dev/null
+  # Same voclabs IAM role works across CloudShell/GitHub STS sessions.
+  if [[ "$(kubectl auth can-i create clusterroles 2>/dev/null)" != yes ]]; then
+    echo 'STOP: current AWS identity cannot administer this EKS cluster. Use its creator voclabs role credentials; do not create another cluster/state.' >&2
+    exit 1
+  fi
 }
 
 apply_infra() {
@@ -100,8 +105,11 @@ case "$ACTION" in
     platform_init
     # Keep EBS CSI running until Kubernetes has deleted its volumes.
     TASK_PVS="$(kubectl get pv -o json | python3 -c 'import json,sys; print(" ".join(x["metadata"]["name"] for x in json.load(sys.stdin)["items"] if x.get("spec",{}).get("claimRef",{}).get("namespace") in ["database-ns","application-namespace"]))')"
-    kubectl delete application root-app -n argo-cd --ignore-not-found
-    kubectl delete application application database infrastructure -n argo-cd --ignore-not-found
+    # infra-only runs may not have installed Argo's Application CRD yet.
+    if kubectl get crd applications.argoproj.io >/dev/null 2>&1; then
+      kubectl delete application root-app -n argo-cd --ignore-not-found
+      kubectl delete application application database infrastructure -n argo-cd --ignore-not-found
+    fi
     kubectl delete namespace application-namespace database-ns --ignore-not-found --timeout=600s
     for task_pv in $TASK_PVS; do
       kubectl wait --for=delete "pv/$task_pv" --timeout=300s

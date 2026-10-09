@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       stage:
-        description: Terraform stage
+        description: 'all = AWS + platform; infra = AWS; platform = Argo/EBS/secrets; refresh = renew SQS credentials'
         required: true
         type: choice
         default: all
@@ -20,10 +20,24 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Require main
+        env:
+          SELECTED_REF: ${{ github.ref }}
+        run: |
+          if [[ "$SELECTED_REF" != refs/heads/main ]]; then
+            echo '::error::Run this workflow on main.'
+            exit 1
+          fi
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: '1.13.5'
           terraform_wrapper: false
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.35.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -31,8 +45,25 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
           allowed-account-ids: '425959969184'
+      - name: Check Learner Lab session
+        run: bash scripts/check-lab-actions.sh
       - name: Apply Terraform stages
         env:
           DEPLOY_STAGE: ${{ inputs.stage }}
-          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || 'eks-project1-tfstate-425959969184-us-east-1' }}
         run: bash scripts/deploy-lab.sh "$DEPLOY_STAGE"
+      - name: Show dashboard URL and next step
+        env:
+          DEPLOY_STAGE: ${{ inputs.stage }}
+        run: |
+          url="$(TF_DATA_DIR=/tmp/eks-tf-infra terraform -chdir=terraform output -raw dashboard_url)"
+          printf '### Learner Lab deployment\nDashboard: [%s](%s)\n\n' "$url" "$url" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$DEPLOY_STAGE" == infra ]]; then
+            echo 'Next: run app-cd pipeline on main, wait for green, then run deploy infrastructure with stage platform.' >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$DEPLOY_STAGE" == all ]]; then
+            echo 'AWS and platform are ready. Run app-cd pipeline on main to publish images and update manifests. Argo CD deploys them automatically.' >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$DEPLOY_STAGE" == platform ]]; then
+            echo 'Argo CD is deploying manifests from main. Allow application startup time before opening the dashboard.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'SQS credentials refreshed and SQS deployments restarted.' >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,99 @@
+DEPLOY / XÓA HOÀN TOÀN TỪ GITHUB ACTIONS — LEARNER LAB
+
+Không cần chạy lệnh CloudShell cho quy trình dưới đây.
+Repo: https://github.com/anhhao1712/eks-project1
+Account 425959969184 | Region us-east-1 | Role quản trị voclabs
+
+1. MỞ LEARNER LAB
+Start Lab, đợi phiên hoạt động. Giữ phiên hoạt động trong suốt workflow.
+AWS Details → AWS CLI: lấy access key, secret key và session token của phiên hiện tại.
+Đây là credentials tạm thời, không được workflow tự gia hạn.
+
+2. CẬP NHẬT GITHUB SECRETS
+Repo → Settings → Secrets and variables → Actions → Secrets.
+Tạo/cập nhật cả 3 repository secrets:
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+- AWS_SESSION_TOKEN
+Không dán các giá trị vào file source, Variables hoặc log.
+Workflow dùng trực tiếp credentials này, không tạo IAM role hay GitHub OIDC.
+
+3. CHỌN ĐÚNG BUCKET STATE
+Cùng trang → Variables → New repository variable:
+Name: TF_STATE_BUCKET
+Value: eks-project1-tfstate-425959969184-us-east-1
+Nếu không đặt variable, workflow cũng dùng đúng tên này làm mặc định.
+Bucket đang có sẽ được dùng lại; deploy tự tạo nếu chưa có.
+Không đổi bucket khi còn tài nguyên của bản deploy hiện tại.
+
+4. BẬT WORKFLOW
+Repo → Actions → deploy infrastructure → Enable workflow nếu đang Disabled.
+Làm tương tự với destroy infrastructure và app-cd pipeline nếu cần.
+Disabled là trạng thái trên GitHub, commit file workflow không tự bật lại được.
+Nếu repo hạn chế Actions, Settings → Actions → General phải cho phép các action đang dùng.
+App-cd cần quyền push main cho GITHUB_TOKEN; branch protection cũng phải cho phép bot cập nhật manifest.
+
+5. DEPLOY TỪ ĐẦU — QUY TRÌNH NÊN DÙNG
+
+5A. Actions → deploy infrastructure → Run workflow:
+Branch: main
+Stage: infra
+Bấm Run workflow, đợi xanh.
+Workflow tự chuẩn bị Terraform/kubectl/Python, kiểm tra credentials, tạo bucket và apply hạ tầng AWS.
+Tạo EKS, 3 node, ECR, SQS, NLB; dùng LabRole đã có, không tạo IAM role mới.
+
+5B. Actions → app-cd pipeline → Run workflow:
+Branch: main
+Bấm Run workflow, đợi xanh toàn bộ, gồm update-manifests.
+Build/push 9 image vào ECR rồi commit image tag vào manifest.
+Không push code trong lúc build. Nếu main đổi, chạy một workflow mới trên main hiện tại.
+
+5C. Actions → deploy infrastructure → Run workflow:
+Branch: main
+Stage: platform
+Bấm Run workflow, đợi xanh.
+Cài EBS CSI, Argo CD, tạo secrets/root-app. Argo tự đọc manifest main và deploy ứng dụng.
+Summary của lần chạy hiển thị dashboard URL; chờ ứng dụng khởi động rồi mở URL.
+Không cần git pull/terraform init/apply/kubectl thủ công.
+
+6. Ý NGHĨA CÁC STAGE
+- infra: tạo/cập nhật hạ tầng AWS.
+- platform: cài/cập nhật EBS, Argo CD, Kubernetes Secrets và root-app.
+- all: chạy infra rồi platform trong một lần; KHÔNG build image.
+- refresh: cập nhật credentials SQS và restart các deployment dùng SQS.
+Nếu dùng all từ đầu, sau khi xanh vẫn cần chạy app-cd pipeline để publish image.
+Các workflow infra/app-cd/destroy dùng cùng nhóm concurrency để tránh chạy đồng thời.
+
+7. VỚI DASHBOARD HIỆN TẠI ĐÃ CHẠY
+Không cần xóa rồi tạo lại chỉ để chuyển sang GitHub.
+Sau khi cấu hình secrets/variable, workflow dùng hai state S3 hiện có.
+Chọn refresh khi đổi phiên Lab; chọn platform để cập nhật platform; infra để cập nhật AWS.
+Sau khi sửa source ứng dụng, chạy app-cd pipeline; Argo tự triển khai image mới.
+
+8. ĐỔI PHIÊN LAB
+Start Lab mới → cập nhật cả 3 repository secrets.
+Actions → deploy infrastructure → Run workflow → main → stage refresh.
+Credentials trong Kubernetes Secret được cập nhật và 4 deployment SQS được restart.
+Đổi GitHub secrets riêng sẽ không tự cập nhật credentials trong Pod đang chạy.
+
+9. XÓA TỪ GITHUB
+Actions → destroy infrastructure → Run workflow → main.
+Không tích delete_state_bucket: xóa ứng dụng/EBS/platform/AWS, giữ bucket state.
+Tích delete_state_bucket: xóa thêm bucket hiện tại cùng mọi phiên bản state.
+Bấm Run workflow. Dữ liệu PostgreSQL/Redis và image ECR sẽ bị xóa.
+LabRole, source GitHub, GitHub secrets và tài nguyên ngoài state này được giữ lại.
+Xóa cả bucket chỉ hỗ trợ tên chuyên dụng eks-project1-tfstate-425959969184-us-east-1.
+
+10. GIỚI HẠN LEARNER LAB VÀ CÁCH ĐÃ XỬ LÝ
+- iam:CreateRole đã bị từ chối: Terraform dùng LabRole cho EKS/node; không dùng OIDC/IRSA mới.
+- LabRole có trust EKS/EC2 và PassRole đã được bạn xác nhận; giữ cấu hình hiện có.
+- EBS controller dùng mạng host để lấy quyền node LabRole; không cần sửa trust policy.
+- Secrets/SQS dùng Kubernetes Secrets do Terraform quản lý; credentials SQS có thời hạn.
+- Cluster hiện tại do voclabs tạo; runner dùng credentials cùng role để giữ quyền Kubernetes.
+- GitHub runner truy cập EKS API public; endpoint hiện tại hỗ trợ việc này.
+- Hạn mức/ngân sách của Lab vẫn áp dụng; GitHub không tăng quyền hoặc quota AWS.
+- Phiên/token hết hạn giữa workflow có thể làm apply dở dang; cập nhật secrets và chạy lại cùng stage/bucket.
+- Nếu lỗi quyền AWS, dừng xem action bị từ chối; không đổi state hoặc cố tạo role khác.
+
+Kết quả GitHub Actions chưa được chạy thực tế bởi Codex.
+Hạ tầng và dashboard đã được bạn xác nhận hoạt động khi apply từ CloudShell.
