@@ -35,7 +35,7 @@ spec:
       serviceAccountName: payment-service-service-account
       containers:
       - name: payment-service
-        image: 425959969184.dkr.ecr.us-east-1.amazonaws.com/eks-project1-lab/payment-service:2de7e995176ebcd1bb1771a7f4efd0159a3fd7e8-37894255443-1
+        image: 425959969184.dkr.ecr.us-east-1.amazonaws.com/eks-project1-lab/payment-service:56404ae086697d359ffb462a7203e42571bf6d5c-37906912001-1
         imagePullPolicy: Always
         securityContext:
           runAsNonRoot: true
