@@ -100,7 +100,8 @@ case "$ACTION" in
     platform_init
     # Keep EBS CSI running until Kubernetes has deleted its volumes.
     TASK_PVS="$(kubectl get pv -o json | python3 -c 'import json,sys; print(" ".join(x["metadata"]["name"] for x in json.load(sys.stdin)["items"] if x.get("spec",{}).get("claimRef",{}).get("namespace") in ["database-ns","application-namespace"]))')"
-    kubectl delete applications --all -n argo-cd --ignore-not-found
+    kubectl delete application root-app -n argo-cd --ignore-not-found
+    kubectl delete application application database infrastructure -n argo-cd --ignore-not-found
     kubectl delete namespace application-namespace database-ns --ignore-not-found --timeout=600s
     for task_pv in $TASK_PVS; do
       kubectl wait --for=delete "pv/$task_pv" --timeout=300s

@@ -4,7 +4,7 @@ Bản này dùng hai Terraform state trong cùng bucket: terraform/ tạo AWS; t
 
 Terraform tạo public Network Load Balancer → NodePort 30086 → dashboard-api. Dashboard proxy /auth và /api tới gateway, nên trình duyệt chỉ cần một URL. Không cần domain hoặc AWS Load Balancer Controller/IRSA mới. Giữ 3 node, 2 replica cho các service như hiện tại và PVC EBS cho PostgreSQL/Redis.
 
-Đây là HTTP cho demo. Login của tác giả vẫn chấp nhận thông tin tùy ý. Chưa chạy test/plan/apply cho thay đổi này theo yêu cầu người dùng; quyền tạo NLB và gắn target group vào node ASG trong Lab chưa được kiểm chứng.
+Đây là HTTP cho demo. Login của tác giả vẫn chấp nhận thông tin tùy ý. Người dùng đã apply thành công và mở được dashboard public trong Lab. Hướng dẫn từng lệnh nằm trong HUONG-DAN-DEPLOY-LEARNER-LAB.txt.
 
 ## Chạy từ CloudShell
 
@@ -64,5 +64,7 @@ bash scripts/deploy-lab.sh destroy
 ```
 
 Script dừng các Argo Applications, xóa namespace ứng dụng/database, đợi PV biến mất trong khi EBS CSI còn chạy; sau đó destroy platform rồi destroy AWS. ECR force_delete xóa cả image. Secret bị xóa không có thời gian khôi phục. Bucket state được giữ lại để quản lý lịch sử; chỉ xóa riêng bucket của dự án sau khi destroy hoàn tất nếu không cần lịch sử.
+
+Để xóa cả bucket state của bản deploy hiện tại, chạy `bash scripts/destroy-lab-all.sh`. Script chỉ chấp nhận bucket `eks-project1-tfstate-425959969184-us-east-1`, xóa cả các phiên bản/object sau khi hai phần Terraform destroy thành công. Dừng các workflow đang deploy/build trước khi chạy. Lệnh này xóa dữ liệu ứng dụng và lịch sử state; giữ LabRole và tài nguyên ngoài bản deploy hiện tại.
 
 Bản cũ cài bằng kubectl/managed add-on cần được dọn theo hướng dẫn cũ trước khi áp dụng bản này. Script không tự nhận quản lý tài nguyên cài tay hoặc thay mật khẩu database đang có dữ liệu. Nếu báo tên resource đã tồn tại, dừng và xử lý state/import; không tạo thêm bucket để né lỗi.
