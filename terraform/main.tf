@@ -13,13 +13,13 @@ module "eks" {
   aws_public_subnet_ids                             = module.networking.aws_public_subnet_ids
   aws_sg_eks_control_plane                          = module.security.aws_sg_eks_control_plane.id
   aws_iam_role_policy_attachment_eks_cluster_policy = var.create_iam_resources ? module.iam[0].aws_iam_role_policy_attachment_eks_cluster_policy.id : "existing-policy"
-  aws_iam_role_eks_role                             = var.eks_role_arn
-  aws_iam_role_node_group_role                      = var.aws_iam_role_node_group_role_arn
+  aws_iam_role_eks_role                             = var.create_iam_resources ? module.iam[0].aws_iam_role_eks_role.arn : var.eks_role_arn
+  aws_iam_role_node_group_role                      = var.create_iam_resources ? module.iam[0].aws_iam_role_node_group_role.arn : var.aws_iam_role_node_group_role_arn
   aws_key_arn                                       = var.aws_key_arn
   #ip_address                                        = var.ip_address
   aws_account_id                   = var.aws_account_id
-  eks_role_arn                     = var.eks_role_arn
-  aws_iam_role_node_group_role_arn = var.aws_iam_role_node_group_role_arn
+  eks_role_arn                     = var.create_iam_resources ? module.iam[0].aws_iam_role_eks_role.arn : var.eks_role_arn
+  aws_iam_role_node_group_role_arn = var.create_iam_resources ? module.iam[0].aws_iam_role_node_group_role.arn : var.aws_iam_role_node_group_role_arn
 
 }
 
@@ -41,7 +41,6 @@ module "helm" {
   karpeneter_module                    = module.irsa[0].karpeneter_module
   aws_eks_cluster_eks_cluster_endpoint = module.eks.aws_eks_cluster_eks_cluster_endpoint
   aws_eks_cluster_eks_cluster_name     = module.eks.aws_eks_cluster_eks_cluster_name
-  module_external_dns                  = module.irsa[0].module_external_dns
   module_aws_load_balancer_controller  = module.irsa[0].module_aws_load_balancer_controller
   ebs_csi_controller_role_arn          = module.irsa[0].ebs_csi_controller_role_arn
 
@@ -70,7 +69,6 @@ module "irsa" {
   aws_eks_cluster                                  = module.eks.aws_eks_cluster
   eks_oidc_issuer_url                              = module.eks.aws_eks_cluster_eks_cluster_identity_oidc_issuer
   aws_account_id                                   = var.aws_account_id
-  route53_zone_id                                  = var.route53_zone_id
   postgres_secret_arn                              = var.postgres_secret_arn
   database_secret_arn                              = module.security.database_secret_arn
 
@@ -91,10 +89,10 @@ module "security" {
   aws_vpc_id                          = module.networking.aws_vpc_id
   aws_vpc_id_cidr_block               = module.networking.aws_vpc_id_cidr_block
   aws_iam_role_policy_flow_log_policy = var.create_iam_resources ? module.iam[0].aws_iam_role_policy_flow_log_policy.id : "disabled"
-  aws_iam_role_flow_log_role          = var.flow_log_role_arn
+  aws_iam_role_flow_log_role          = var.create_iam_resources ? module.iam[0].aws_iam_role_flow_log_role.arn : var.flow_log_role_arn
   cloudwatch_key_arn                  = var.cloudwatch_key_arn
   aws_account_id                      = var.aws_account_id
-  flow_log_role_arn                   = var.flow_log_role_arn
+  flow_log_role_arn                   = var.create_iam_resources ? module.iam[0].aws_iam_role_flow_log_role.arn : var.flow_log_role_arn
   database_url                        = var.database_url
 
 

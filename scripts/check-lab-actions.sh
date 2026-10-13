@@ -3,7 +3,7 @@
 set -euo pipefail
 for task_key in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN; do
   if [[ -z "${!task_key:-}" ]]; then
-    echo "::error::Missing $task_key. Update all three repository secrets from the active Lab session."
+    echo "::error::Missing $task_key. Update the three repository secrets from your active AWS access portal session."
     exit 1
   fi
 done
@@ -14,11 +14,11 @@ import json
 import sys
 
 identity = json.loads(sys.argv[1])
-if identity.get("Account") != "425959969184":
-    sys.exit("::error::Wrong AWS account; use credentials from this Learner Lab.")
-if not identity.get("Arn", "").startswith("arn:aws:sts::425959969184:assumed-role/voclabs/"):
-    sys.exit("::error::Use the same voclabs role as CloudShell. A different IAM principal may not have EKS access.")
-print("Active Learner Lab session: account 425959969184, role voclabs.")
+if identity.get("Account") != "241533156847":
+    sys.exit("::error::Wrong AWS account; use temporary credentials for account 241533156847.")
+if not identity.get("Arn", "").startswith("arn:aws:sts::241533156847:assumed-role/"):
+    sys.exit("::error::Expected an assumed role session from AWS IAM Identity Center.")
+print("Active AWS session: account 241533156847.")
 PY
 
 command -v terraform >/dev/null

@@ -1,21 +1,3 @@
-module "cert_manager_irsa_role" {
-  #checkov:skip=CKV_AWS_1: 
-  version = "5.60.0"
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-
-  role_name                     = "cert-manager"
-  attach_cert_manager_policy    = true
-  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/${var.route53_zone_id}"]
-
-  oidc_providers = {
-    eks = {
-      provider_arn               = var.aws_iam_openid_connect_provider_arn
-      namespace_service_accounts = ["cert-manager:cert-manager"]
-    }
-  }
-
-}
-
 module "karpenter" {
   #checkov:skip=CKV_AWS_1: 
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
@@ -33,25 +15,6 @@ module "karpenter" {
     Environment = "dev"
     Terraform   = "true"
   }
-}
-
-module "external-dns" {
-  #checkov:skip=CKV_AWS_1: 
-  version = "5.60.0"
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-
-
-  role_name                     = "external-dns"
-  attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/${var.route53_zone_id}"]
-
-  oidc_providers = {
-    eks = {
-      provider_arn               = var.aws_iam_openid_connect_provider_arn
-      namespace_service_accounts = ["external-dns:external-dns"]
-    }
-  }
-
 }
 
 module "aws-load-balancer-controller" {

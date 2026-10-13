@@ -13,7 +13,7 @@ $env:AWS_DEFAULT_REGION = 'us-east-1'
 $env:AWS_PAGER = ''
 $taskIdentity = aws sts get-caller-identity --output json
 if ($LASTEXITCODE -ne 0) { throw 'AWS session is invalid.' }
-if ((($taskIdentity -join "`n") | ConvertFrom-Json).Account -ne '425959969184') {
+if ((($taskIdentity -join "`n") | ConvertFrom-Json).Account -ne '241533156847') {
     throw 'Wrong AWS account.'
 }
 aws eks update-kubeconfig --name eks-cluster --region us-east-1

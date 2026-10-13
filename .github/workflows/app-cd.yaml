@@ -1,6 +1,6 @@
 name: app-cd pipeline
 
-run-name: Build and publish Learner Lab images by ${{ github.actor }}
+run-name: Build and publish AWS images by ${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -9,13 +9,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: learner-lab-terraform
+  group: eks-project1-terraform
   cancel-in-progress: false
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: "425959969184"
-  ECR_PREFIX: eks-project1-lab
+  AWS_ACCOUNT_ID: "241533156847"
+  ECR_PREFIX: eks-project1
   IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Authenticate with Learner Lab session credentials
+      - name: Authenticate with AWS session credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -85,7 +85,7 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Authenticate with Learner Lab session credentials
+      - name: Authenticate with AWS session credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -218,6 +218,6 @@ jobs:
             echo "No manifest changes to publish."
             exit 0
           fi
-          git commit -m "Deploy Learner Lab images ${IMAGE_TAG}"
+          git commit -m "Deploy AWS images ${IMAGE_TAG}"
           git push origin HEAD:main
           echo "Updated application manifests on main. Argo CD can now sync this revision." >> "$GITHUB_STEP_SUMMARY"

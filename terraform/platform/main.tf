@@ -17,7 +17,7 @@ terraform {
 variable "platform_config" {
   type = object({
     cluster_name        = string, cluster_endpoint = string, cluster_ca = string,
-    database_secret_arn = string, queue_url = string
+    database_secret_arn = string, queue_url = string, ebs_csi_role_arn = string
   })
 }
 
@@ -28,7 +28,7 @@ variable "sqs_credentials" {
 
 provider "aws" {
   region              = "us-east-1"
-  allowed_account_ids = ["425959969184"]
+  allowed_account_ids = ["241533156847"]
 }
 
 provider "kubernetes" {
@@ -60,15 +60,14 @@ resource "helm_release" "ebs" {
   chart      = "aws-ebs-csi-driver"
   version    = "2.65.1"
   timeout    = 600
-  values = [yamlencode({ controller = {
-    region = "us-east-1"
-  } })]
-  # This chart has no controller hostNetwork value. Patch the rendered Pod spec
-  # so the controller can use LabRole through the node's IMDS endpoint.
-  postrender = {
-    binary_path = "python3"
-    args        = [abspath("${path.module}/ebs-postrender.py")]
-  }
+  values = [yamlencode({
+    controller = {
+      region = "us-east-1"
+      serviceAccount = {
+        annotations = { "eks.amazonaws.com/role-arn" = var.platform_config.ebs_csi_role_arn }
+      }
+    }
+  })]
 }
 
 resource "helm_release" "argocd" {

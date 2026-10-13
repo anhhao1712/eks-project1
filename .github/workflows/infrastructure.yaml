@@ -1,5 +1,5 @@
 name: deploy infrastructure
-run-name: Deploy Learner Lab infrastructure by ${{ github.actor }}
+run-name: Deploy AWS infrastructure by ${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: learner-lab-terraform
+  group: eks-project1-terraform
   cancel-in-progress: false
 jobs:
   deploy:
@@ -44,20 +44,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
-          allowed-account-ids: '425959969184'
-      - name: Check Learner Lab session
+          allowed-account-ids: '241533156847'
+      - name: Check AWS session
         run: bash scripts/check-lab-actions.sh
       - name: Apply Terraform stages
         env:
           DEPLOY_STAGE: ${{ inputs.stage }}
-          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || 'eks-project1-tfstate-425959969184-us-east-1' }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || 'eks-project1-tfstate-241533156847-us-east-1' }}
         run: bash scripts/deploy-lab.sh "$DEPLOY_STAGE"
       - name: Show dashboard URL and next step
         env:
           DEPLOY_STAGE: ${{ inputs.stage }}
         run: |
           url="$(TF_DATA_DIR=/tmp/eks-tf-infra terraform -chdir=terraform output -raw dashboard_url)"
-          printf '### Learner Lab deployment\nDashboard: [%s](%s)\n\n' "$url" "$url" >> "$GITHUB_STEP_SUMMARY"
+          printf '### AWS deployment\nDashboard: [%s](%s)\n\n' "$url" "$url" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$DEPLOY_STAGE" == infra ]]; then
             echo 'Next: run app-cd pipeline on main, wait for green, then run deploy infrastructure with stage platform.' >> "$GITHUB_STEP_SUMMARY"
           elif [[ "$DEPLOY_STAGE" == all ]]; then

@@ -1,7 +1,7 @@
 variable "app_ecr_repo" {
   type        = set(string)
   description = "1 repo for each 9 service"
-  default     = ["eks-project1-lab/api-gateway", "eks-project1-lab/dashboard-api", "eks-project1-lab/inventory-service", "eks-project1-lab/notification-service", "eks-project1-lab/order-service", "eks-project1-lab/payment-service", "eks-project1-lab/scheduler", "eks-project1-lab/shipping-service", "eks-project1-lab/worker"]
+  default     = ["eks-project1/api-gateway", "eks-project1/dashboard-api", "eks-project1/inventory-service", "eks-project1/notification-service", "eks-project1/order-service", "eks-project1/payment-service", "eks-project1/scheduler", "eks-project1/shipping-service", "eks-project1/worker"]
 
 }
 
@@ -11,12 +11,6 @@ variable "region" {
   default = "us-east-1"
 
 }
-
-#variable "domain" {
-# type    = string
-#default = "ecommerce.example.invalid"
-
-#}
 
 #variable "aws_eks_cluster" {
 # type = string
@@ -58,7 +52,7 @@ variable "cloudwatch_key_arn" {
 
 variable "aws_account_id" {
   type    = string
-  default = "425959969184"
+  default = "241533156847"
 
 }
 
@@ -84,12 +78,6 @@ variable "database_url" {
 
 }
 
-variable "route53_zone_id" {
-  default     = null
-  type        = string
-  description = "Your Route 53 hosted zone ID; required before DNS controllers can be used."
-}
-
 variable "postgres_secret_arn" {
   default     = null
   type        = string
@@ -105,7 +93,7 @@ variable "install_platform_helm" {
   default = true
   validation {
     condition     = !var.install_platform_helm || var.create_iam_resources
-    error_message = "Original Helm platform requires the original IRSA modules. Install the lab platform separately."
+    error_message = "Platform Helm releases require IAM and IRSA resources to be enabled."
   }
 }
 variable "enable_flow_logs" {

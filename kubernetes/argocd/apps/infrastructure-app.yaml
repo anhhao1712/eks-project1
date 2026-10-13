@@ -13,7 +13,7 @@ spec:
     path: kubernetes/infrastructure
     directory:
       recurse: true
-      exclude: '{issuer.yaml,volumes-snapshot.yaml,karpenter/**,keda/**,namespaces/argocd-ns.yaml,namespaces/application.yaml,namespaces/database.yaml}'
+      exclude: '{volumes-snapshot.yaml,karpenter/**,keda/**,namespaces/argocd-ns.yaml,namespaces/application.yaml,namespaces/database.yaml}'
   destination:
     server: https://kubernetes.default.svc
     namespace: default
