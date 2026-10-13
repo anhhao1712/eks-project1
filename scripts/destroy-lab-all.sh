@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Deletes this deployment, including all versions of its Terraform state bucket.
-# Run in CloudShell. Never deletes the shared LabRole or unrelated resources.
+# Run in CloudShell. Never deletes the shared account roles or unrelated resources.
 set -euo pipefail
 TASK_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export AWS_REGION=us-east-1 AWS_DEFAULT_REGION=us-east-1 AWS_PAGER=""
-export STATE_BUCKET="${STATE_BUCKET:-eks-project1-tfstate-425959969184-us-east-1}"
-if [[ "$STATE_BUCKET" != eks-project1-tfstate-425959969184-us-east-1 ]]; then
+export STATE_BUCKET="${STATE_BUCKET:-eks-project1-tfstate-241533156847-us-east-1}"
+if [[ "$STATE_BUCKET" != eks-project1-tfstate-241533156847-us-east-1 ]]; then
   echo 'STOP: this full-cleanup script only deletes the dedicated current state bucket.' >&2
   exit 1
 fi
@@ -52,4 +52,4 @@ PY
 
 rm -f -- "$TASK_ROOT/.lab-state-bucket"
 echo 'Done: current project deployment and its state bucket deleted.'
-echo 'LabRole, source code, GitHub secrets and unrelated/older resources are retained.'
+echo 'IAM roles, source code, GitHub secrets and unrelated/older resources are retained.'

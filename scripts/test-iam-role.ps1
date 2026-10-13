@@ -1,4 +1,4 @@
-param([string]$ExpectedAccount = '425959969184')
+param([string]$ExpectedAccount = '241533156847')
 $ErrorActionPreference = 'Stop'
 
 if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {

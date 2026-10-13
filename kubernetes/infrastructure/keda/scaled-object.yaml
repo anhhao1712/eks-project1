@@ -18,7 +18,7 @@ spec:
     - type: aws-sqs-queue
 
       metadata:
-        queueURL: https://sqs.us-east-1.amazonaws.com/425959969184/eks_sqs
+        queueURL: https://sqs.us-east-1.amazonaws.com/241533156847/eks_sqs
         awsRegion: us-east-1
         queueLength: "5"
 

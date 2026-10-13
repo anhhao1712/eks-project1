@@ -40,10 +40,6 @@ variable "aws_account_id" {
   type = string
 }
 
-variable "route53_zone_id" {
-  type = string
-}
-
 variable "postgres_secret_arn" {
   type = string
 }

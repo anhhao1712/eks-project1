@@ -1,5 +1,5 @@
 name: destroy infrastructure
-run-name: Destroy Learner Lab project by ${{ github.actor }}
+run-name: Destroy AWS project by ${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +11,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: learner-lab-terraform
+  group: eks-project1-terraform
   cancel-in-progress: false
 jobs:
   destroy:
@@ -43,18 +43,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
-          allowed-account-ids: '425959969184'
-      - name: Check Learner Lab session
+          allowed-account-ids: '241533156847'
+      - name: Check AWS session
         run: bash scripts/check-lab-actions.sh
       - name: Delete workloads, volumes, platform and AWS infrastructure
         env:
-          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || 'eks-project1-tfstate-425959969184-us-east-1' }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || 'eks-project1-tfstate-241533156847-us-east-1' }}
           DELETE_STATE_BUCKET: ${{ inputs.delete_state_bucket }}
         run: |
           if [[ "$DELETE_STATE_BUCKET" == true ]]; then
             bash scripts/destroy-lab-all.sh
-            echo 'Project deployment and dedicated state bucket deleted. LabRole retained.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Project deployment and dedicated state bucket deleted.' >> "$GITHUB_STEP_SUMMARY"
           else
             bash scripts/deploy-lab.sh destroy
-            echo 'Project deployment deleted. State bucket and LabRole retained.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Project deployment deleted. State bucket retained.' >> "$GITHUB_STEP_SUMMARY"
           fi

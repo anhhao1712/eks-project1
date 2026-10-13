@@ -7,7 +7,7 @@ ACTION="${1:-all}"
 case "$ACTION" in all|infra|platform|refresh|destroy) ;; *) echo 'Use: all | infra | platform | refresh | destroy'; exit 1 ;; esac
 
 TASK_ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
-if [[ "$TASK_ACCOUNT" != 425959969184 ]]; then
+if [[ "$TASK_ACCOUNT" != 241533156847 ]]; then
   echo 'STOP: wrong AWS account.' >&2; exit 1
 fi
 
@@ -32,7 +32,7 @@ for path in paths:
 PY
 )"
 fi
-STATE_BUCKET="${STATE_BUCKET:-eks-project1-tfstate-425959969184-us-east-1}"
+STATE_BUCKET="${STATE_BUCKET:-eks-project1-tfstate-241533156847-us-east-1}"
 export STATE_BUCKET
 if [[ "$ACTION" == destroy ]]; then
   aws s3api head-bucket --bucket "$STATE_BUCKET"
@@ -42,6 +42,8 @@ fi
 if [[ "$ACTION" != destroy ]]; then
   aws s3api put-bucket-versioning --bucket "$STATE_BUCKET" --versioning-configuration Status=Enabled
   aws s3api put-public-access-block --bucket "$STATE_BUCKET" --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+  aws s3api put-bucket-encryption --bucket "$STATE_BUCKET" --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"},"BucketKeyEnabled":true}]}'
+  aws s3api put-bucket-tagging --bucket "$STATE_BUCKET" --tagging 'TagSet=[{Key=Project,Value=eks-project1},{Key=Owner,Value=anhhao1712},{Key=Environment,Value=learning},{Key=ManagedBy,Value=GitHubActions}]'
 fi
 printf '%s\n' "$STATE_BUCKET" > "$TASK_ROOT/.lab-state-bucket"
 export TF_IN_AUTOMATION=1
@@ -61,9 +63,9 @@ platform_init() {
   mkdir -p "$TF_DATA_DIR"
   terraform -chdir="$TASK_ROOT/terraform/platform" init -input=false -reconfigure -backend-config="bucket=$STATE_BUCKET"
   aws eks update-kubeconfig --name eks-cluster --region us-east-1 >/dev/null
-  # Same voclabs IAM role works across CloudShell/GitHub STS sessions.
+  # Use the active AWS IAM Identity Center role for Kubernetes access.
   if [[ "$(kubectl auth can-i create clusterroles 2>/dev/null)" != yes ]]; then
-    echo 'STOP: current AWS identity cannot administer this EKS cluster. Use its creator voclabs role credentials; do not create another cluster/state.' >&2
+    echo 'STOP: current AWS identity cannot administer this EKS cluster. Use the IAM Identity Center role that created the cluster; do not create another cluster/state.' >&2
     exit 1
   fi
 }
@@ -123,7 +125,7 @@ case "$ACTION" in
 esac
 
 if [[ "$ACTION" == all || "$ACTION" == platform ]]; then
-  echo 'Run app-cd pipeline on main with the current Lab credentials. Argo will deploy the published image tags.'
+  echo 'Run app-cd pipeline on main with the current AWS credentials. Argo will deploy the published image tags.'
 fi
 TF_DATA_DIR=/tmp/eks-tf-infra terraform -chdir="$TASK_ROOT/terraform" output -raw dashboard_url
 printf '\n'

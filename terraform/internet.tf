@@ -78,5 +78,6 @@ output "platform_config" {
     cluster_ca          = module.eks.aws_eks_cluster_eks_cluster_certificate_authority_data
     database_secret_arn = module.security.database_secret_arn
     queue_url           = module.sqs.queue_url
+    ebs_csi_role_arn    = module.irsa[0].ebs_csi_controller_role_arn
   }
 }
