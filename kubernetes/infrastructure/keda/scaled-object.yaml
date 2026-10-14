@@ -9,10 +9,10 @@ spec:
   scaleTargetRef:
     name: worker-deployment
   pollingInterval:  30                                      # Optional. Default: 30 seconds
-  cooldownPeriod:   300                                     # Optional. Default: 300 seconds
+  cooldownPeriod:   60                                      # Short cooldown for the learning demo
  
   minReplicaCount:  1                                   # change back to 1 nvjbrgrd
-  maxReplicaCount:  10                                    # Optional. Default: 100
+  maxReplicaCount:  3                                       # Cap pod scaling for the learning demo
 
   triggers:
     - type: aws-sqs-queue
