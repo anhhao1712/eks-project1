@@ -329,7 +329,12 @@ data "aws_iam_policy_document" "postgres_iam_policy_document" {
     ]
 
 
-    resources = [var.postgres_secret_arn]
+    # The secret is created later by the platform Terraform stage. Until then,
+    # allow only the eks/postgres secret and its Secrets Manager suffix.
+    resources = [coalesce(
+      var.postgres_secret_arn,
+      "arn:aws:secretsmanager:${var.region}:${var.aws_account_id}:secret:eks/postgres-*"
+    )]
   }
 
 }
