@@ -8,12 +8,14 @@ on:
     paths:
       - "services/**"
       - "kubernetes/**"
+      - "terraform/**"
       - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths:
       - "services/**"
       - "kubernetes/**"
+      - "terraform/**"
       - ".github/workflows/**"
   workflow_dispatch:
   workflow_call:
@@ -72,3 +74,24 @@ jobs:
           framework: kubernetes
           skip_check: CKV_K8S_43,CKV_K8S_14
           output_format: cli
+
+  terraform-validate:
+    name: Validate Terraform configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.13.5"
+          terraform_wrapper: false
+      - name: Initialize infrastructure configuration without an AWS backend
+        run: terraform -chdir=terraform init -backend=false -input=false
+      - name: Validate infrastructure configuration
+        run: terraform -chdir=terraform validate
+      - name: Initialize platform configuration without an AWS backend
+        run: terraform -chdir=terraform/platform init -backend=false -input=false
+      - name: Validate platform configuration
+        run: terraform -chdir=terraform/platform validate

@@ -17,11 +17,6 @@ variable "aws_eks_cluster_eks_cluster_name" {
   
 }
 
-variable "module_aws_load_balancer_controller" {
-   # type = string
-  
-}
-
 variable "ebs_csi_controller_role_arn" {
   type = string
 }

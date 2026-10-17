@@ -6,10 +6,6 @@ resource "helm_release" "traefik" {
   version          = "39.0.0"
   namespace        = "traefik"
   create_namespace = true
-  depends_on = [ var.module_aws_load_balancer_controller ]
-
-
-
   values = [
    # <<-EOT
     #  installCRDs: true
