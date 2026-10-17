@@ -104,19 +104,35 @@ case "$ACTION" in
     ;;
   destroy)
     infra_init
-    platform_init
-    # Keep EBS CSI running until Kubernetes has deleted its volumes.
-    TASK_PVS="$(kubectl get pv -o json | python3 -c 'import json,sys; print(" ".join(x["metadata"]["name"] for x in json.load(sys.stdin)["items"] if x.get("spec",{}).get("claimRef",{}).get("namespace") in ["database-ns","application-namespace"]))')"
-    # infra-only runs may not have installed Argo's Application CRD yet.
-    if kubectl get crd applications.argoproj.io >/dev/null 2>&1; then
-      kubectl delete application root-app -n argo-cd --ignore-not-found
-      kubectl delete application application database infrastructure -n argo-cd --ignore-not-found
+    # A previous destroy may have completed the platform state and then failed
+    # partway through AWS infrastructure deletion. In that case the infra
+    # outputs (including platform_config) may already be gone, so inspect the
+    # platform state before trying to configure Kubernetes/Helm providers.
+    export TF_DATA_DIR=/tmp/eks-tf-platform
+    mkdir -p "$TF_DATA_DIR"
+    terraform -chdir="$TASK_ROOT/terraform/platform" init -input=false -reconfigure -backend-config="bucket=$STATE_BUCKET"
+    TASK_PLATFORM_STATE="$(terraform -chdir="$TASK_ROOT/terraform/platform" state list)"
+    if [[ -n "$TASK_PLATFORM_STATE" ]]; then
+      if ! TF_DATA_DIR=/tmp/eks-tf-infra terraform -chdir="$TASK_ROOT/terraform" output -json platform_config >/dev/null 2>&1; then
+        echo 'STOP: platform Terraform state still contains resources, but infra output platform_config is missing. Do not apply or recreate infrastructure; inspect the two Terraform states before continuing destroy.' >&2
+        exit 1
+      fi
+      platform_init
+      # Keep EBS CSI running until Kubernetes has deleted its volumes.
+      TASK_PVS="$(kubectl get pv -o json | python3 -c 'import json,sys; print(" ".join(x["metadata"]["name"] for x in json.load(sys.stdin)["items"] if x.get("spec",{}).get("claimRef",{}).get("namespace") in ["database-ns","application-namespace"]))')"
+      # infra-only runs may not have installed Argo's Application CRD yet.
+      if kubectl get crd applications.argoproj.io >/dev/null 2>&1; then
+        kubectl delete application root-app -n argo-cd --ignore-not-found
+        kubectl delete application application database infrastructure -n argo-cd --ignore-not-found
+      fi
+      kubectl delete namespace application-namespace database-ns --ignore-not-found --timeout=600s
+      for task_pv in $TASK_PVS; do
+        kubectl wait --for=delete "pv/$task_pv" --timeout=300s
+      done
+      terraform -chdir="$TASK_ROOT/terraform/platform" destroy -input=false -auto-approve
+    else
+      echo 'Platform Terraform state is empty; skipping Kubernetes and platform cleanup.'
     fi
-    kubectl delete namespace application-namespace database-ns --ignore-not-found --timeout=600s
-    for task_pv in $TASK_PVS; do
-      kubectl wait --for=delete "pv/$task_pv" --timeout=300s
-    done
-    terraform -chdir="$TASK_ROOT/terraform/platform" destroy -input=false -auto-approve
     export TF_DATA_DIR=/tmp/eks-tf-infra
     terraform -chdir="$TASK_ROOT/terraform" destroy -input=false -auto-approve -var-file=learner-lab.tfvars
     echo "Destroyed project infrastructure. State bucket retained: $STATE_BUCKET"
