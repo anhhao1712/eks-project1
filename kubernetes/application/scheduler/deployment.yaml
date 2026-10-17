@@ -35,7 +35,7 @@ spec:
       serviceAccountName: scheduler-service-account
       containers:
       - name: scheduler
-        image: 425959969184.dkr.ecr.us-east-1.amazonaws.com/eks-project1-lab/scheduler:58606d1a8eddd2b5684459188e74cccdc275cf5f-38051120949-1
+        image: 241533156847.dkr.ecr.us-east-1.amazonaws.com/eks-project1/scheduler:bd02d366b38581614f66d69ec2375a6b707e1813-39060485252-1
         imagePullPolicy: Always
         securityContext:
           runAsNonRoot: true
