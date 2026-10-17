@@ -45,6 +45,11 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
           allowed-account-ids: '241533156847'
+      - uses: azure/setup-helm@v4
+      - name: Authenticate Helm to Amazon ECR Public
+        run: |
+          aws ecr-public get-login-password --region us-east-1 |
+            helm registry login public.ecr.aws --username AWS --password-stdin
       - name: Check AWS session
         run: bash scripts/check-lab-actions.sh
       - name: Apply Terraform stages
