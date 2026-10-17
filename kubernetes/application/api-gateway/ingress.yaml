@@ -8,7 +8,14 @@ spec:
   rules:
     - http:
         paths:
-          - path: /
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-service
+                port:
+                  number: 80
+          - path: /auth
             pathType: Prefix
             backend:
               service:
