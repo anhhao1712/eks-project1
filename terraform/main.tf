@@ -36,12 +36,11 @@ module "helm" {
   count = var.install_platform_helm ? 1 : 0
   #checkov:skip=CKV_AWS_1: these are local modules
   source                               = "./modules/helm"
-  depends_on                           = [module.eks]
+  depends_on                           = [module.eks, module.irsa]
   module_karpenter_queue_name          = module.irsa[0].module_karpenter_queue_name
   karpeneter_module                    = module.irsa[0].karpeneter_module
   aws_eks_cluster_eks_cluster_endpoint = module.eks.aws_eks_cluster_eks_cluster_endpoint
   aws_eks_cluster_eks_cluster_name     = module.eks.aws_eks_cluster_eks_cluster_name
-  module_aws_load_balancer_controller  = module.irsa[0].module_aws_load_balancer_controller
   ebs_csi_controller_role_arn          = module.irsa[0].ebs_csi_controller_role_arn
 
 }
