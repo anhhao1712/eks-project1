@@ -11,12 +11,12 @@ metadata:
     checkov.io/skip2: CKV_K8S_14=I will add commits when I apply the aws infrastructure
     checkov.io/skip3: CKV_K8S_35
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: dashboard-api
