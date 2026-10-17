@@ -5,8 +5,7 @@ metadata:
   namespace: application-namespace
 
 spec:
-  type: NodePort
-  externalTrafficPolicy: Cluster
+  type: ClusterIP
   selector:
     app: dashboard-api
 
@@ -14,4 +13,3 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8086
-      nodePort: 30086
