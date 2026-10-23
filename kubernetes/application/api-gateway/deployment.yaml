@@ -31,7 +31,7 @@ spec:
       containers:
         - name: api-gateway
           image: >-
-            241533156847.dkr.ecr.us-east-1.amazonaws.com/api-gateway:1884f3b7659ee8b355b8835918e0dc713e34fe75-8
+            241533156847.dkr.ecr.us-east-1.amazonaws.com/api-gateway:b2e8c5805d0dc862a6653172dcca60d0b38bda37-7
           imagePullPolicy: Always
           securityContext:
             runAsNonRoot: true
