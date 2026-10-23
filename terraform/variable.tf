@@ -50,6 +50,7 @@ variable "aws_account_id" {
 
 
 variable "database_url" {
-  type = string
+  type      = string
+  sensitive = true
 
 }

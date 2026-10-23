@@ -35,6 +35,7 @@ variable "flow_log_role_arn" {
 }
 
 variable "database_url" {
-  type = string
+  type      = string
+  sensitive = true
   
 }
