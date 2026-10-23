@@ -27,7 +27,7 @@ module "karpenter" {
 
 
   cluster_name = var.aws_eks_cluster
-  node_iam_role_name = "eks-project1-karpenter-module-node-role"
+  node_iam_role_name = "eks-project1-karpenter"
 
   # Attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
@@ -76,7 +76,7 @@ module "aws-load-balancer-controller" {
 
   enabled = true
 
-  irsa_role_name_prefix = "eks-project1-aws-load-balancer-controller-"
+  irsa_role_name_prefix = "eks-project1-lbc"
 
   values = file("helm-values/aws-load-balancer-controller.yaml")
 
