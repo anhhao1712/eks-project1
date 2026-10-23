@@ -36,7 +36,7 @@ spec:
       containers:
         - name: shipping-service
           image: >-
-            241533156847.dkr.ecr.us-east-1.amazonaws.com/shipping-service:b2e8c5805d0dc862a6653172dcca60d0b38bda37-7
+            241533156847.dkr.ecr.us-east-1.amazonaws.com/shipping-service:1884f3b7659ee8b355b8835918e0dc713e34fe75-8
           imagePullPolicy: Always
           securityContext:
             runAsNonRoot: true
