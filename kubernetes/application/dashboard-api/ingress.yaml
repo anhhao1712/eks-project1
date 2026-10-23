@@ -3,16 +3,9 @@ kind: Ingress
 metadata:
   name: dashboard-api-ingress
   namespace: application-namespace
-  annotations: 
-    cert-manager.io/cluster-issuer: issuer
 spec:
-  tls:
-  - hosts:
-      - dashboard.ecommerce.zakariyaalab.com
-    secretName: dashboard-ingress-tls
   rules:
-  - host: "dashboard.ecommerce.zakariyaalab.com"
-    http:
+  - http:
       paths:
       - pathType: Prefix
         path: "/"

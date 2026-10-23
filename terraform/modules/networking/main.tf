@@ -25,9 +25,9 @@ resource "aws_subnet" "private-subnet" {
 
 
   for_each = {
-    "eu-west-2a" = "10.0.4.0/24"
-    "eu-west-2b" = "10.0.5.0/24"
-    "eu-west-2c" = "10.0.6.0/24"
+    "us-east-1a" = "10.0.4.0/24"
+    "us-east-1b" = "10.0.5.0/24"
+    "us-east-1c" = "10.0.6.0/24"
   }
   availability_zone = each.key
   cidr_block        = each.value
@@ -47,9 +47,9 @@ resource "aws_subnet" "public-eks-subnet" {
   map_public_ip_on_launch = false
 
   for_each = {
-    "eu-west-2a" = "10.0.1.0/24"
-    "eu-west-2b" = "10.0.2.0/24"
-    "eu-west-2c" = "10.0.3.0/24"
+    "us-east-1a" = "10.0.1.0/24"
+    "us-east-1b" = "10.0.2.0/24"
+    "us-east-1c" = "10.0.3.0/24"
   }
   cidr_block        = each.value
   availability_zone = each.key
@@ -100,12 +100,12 @@ resource "aws_route_table_association" "public-route-table-association" {
 
 resource "aws_nat_gateway" "nat-gateway" {
   allocation_id = aws_eip.nat-eip.id
-  subnet_id     = aws_subnet.public-eks-subnet["eu-west-2a"].id
+  subnet_id     = aws_subnet.public-eks-subnet["us-east-1a"].id
   region        = var.region
 
   tags = {
     Name        = "nat-gateway"
-    description = "NAT Gateway for private subnets, placed in public subnet eu-west-2a"
+    description = "NAT Gateway for private subnets, placed in public subnet us-east-1a"
   }
 }
 

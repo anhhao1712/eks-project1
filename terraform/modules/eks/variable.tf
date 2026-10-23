@@ -1,6 +1,6 @@
 variable "region" {
   type    = string
-  default = "eu-west-2"
+  default = "us-east-1"
 
 }
 
@@ -57,11 +57,9 @@ variable "aws_account_id" {
 }
 
 variable "eks_role_arn" {
-    type = string
-
+  type = string
 }
 
 variable "aws_iam_role_node_group_role_arn" {
-    type = string
-  
+  type = string
 }

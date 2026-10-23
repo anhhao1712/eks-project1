@@ -3,13 +3,13 @@ name: infrastructure pipeline
 run-name: infrastructure Pipeline triggered by ${{ github.actor }}
 
 on:
-  push:
-    branches:
-      - main
-
-
-    paths:
-    - terraform/**
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply the Terraform plan and create/update AWS resources
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
@@ -33,8 +33,8 @@ jobs:
           uses: aws-actions/configure-aws-credentials@v4
 
           with:
-            role-to-assume: arn:aws:iam::499024813019:role/terraform_aws
-            aws-region: eu-west-2
+            role-to-assume: arn:aws:iam::241533156847:role/github-actions-terraform
+            aws-region: us-east-1
 
         - name: Sts GetCallerIdentity
           run: |
@@ -49,11 +49,8 @@ jobs:
         - name: terraform-init
           run: terraform init
         
-        - name: Check Terraform state
-          run: |
-                terraform workspace show
-                terraform state pull | grep -E '"lineage"|"serial"'
-                terraform state list | grep traefik || true
+        - name: Check Terraform workspace
+          run: terraform workspace show
 
         - name: terraform-fmt
           run: terraform fmt 
@@ -75,31 +72,27 @@ jobs:
         - name: terraform-validate
           run: terraform validate
 
-        - name: Check live Traefik state
+        - name: Check live Traefik state when the cluster exists
           run: |
-                aws eks update-kubeconfig --region eu-west-2 --name eks-cluster
-                kubectl get svc -n traefik || true
-                helm status traefik -n traefik || true
+                if aws eks describe-cluster --region us-east-1 --name eks-cluster >/dev/null 2>&1; then
+                  aws eks update-kubeconfig --region us-east-1 --name eks-cluster
+                  kubectl get svc -n traefik || true
+                  helm status traefik -n traefik || true
+                else
+                  echo "EKS cluster does not exist yet; skipping live Traefik check."
+                fi
 
         - name: Reinitialize Terraform backend
           run: |
                  rm -rf .terraform
                  terraform init -reconfigure
 
-        - name: Verify current state
-          run: |
-                terraform state pull | grep -E '"lineage"|"serial"' 
-
         - name: terraform-plan
           
           env: 
                 TF_VAR_aws_key_arn: ${{ secrets.AWS_KEY_ARN }}
-                TF_VAR_aws_key_ecr_arn: ${{ secrets.AWS_SECRET_KEY }}
                 TF_VAR_cloudwatch_key_arn: ${{ secrets.CLOUDWATCH_KEY_ARN }}
-                TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-                TF_VAR_eks_role_arn: ${{ secrets.EKS_ROLE_ARN }}
-                TF_VAR_flow_log_role_arn: ${{ secrets.FLOW_LOG_ROLE_ARN }}
-                TF_VAR_aws_iam_role_node_group_role_arn: ${{ secrets.AWS_IAM_ROLE_NODE_GROUP_ROLE_ARN }}
+                TF_VAR_aws_account_id: 241533156847
                 TF_VAR_database_url: ${{ secrets.TF_VAR_DATABASE_URL }}
                 
           run: | 
@@ -125,6 +118,7 @@ jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     needs: terraform-check
+    if: ${{ inputs.apply == true }}
     
     defaults:
       run:
@@ -153,8 +147,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
 
         with:
-          role-to-assume: arn:aws:iam::499024813019:role/terraform_aws
-          aws-region: eu-west-2
+          role-to-assume: arn:aws:iam::241533156847:role/github-actions-terraform
+          aws-region: us-east-1
   
 
       - name: terraform setup
@@ -164,13 +158,6 @@ jobs:
 
       - name: terraform-init
         run: terraform init
-
-      - name: aws cli check
-        run: |
-              aws --version
-              aws sts get-caller-identity
-              aws eks get-token --cluster-name eks-cluster
-
 
       - name: terraform apply
         run: |

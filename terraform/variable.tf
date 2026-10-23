@@ -8,15 +8,9 @@ variable "app_ecr_repo" {
 
 variable "region" {
   type    = string
-  default = "eu-west-2"
+  default = "us-east-1"
 
 }
-
-#variable "domain" {
-# type    = string
-#default = "ecommerce.zakariyaalab.com"
-
-#}
 
 #variable "aws_eks_cluster" {
 # type = string
@@ -43,10 +37,6 @@ variable "aws_key_arn" {
 
 }
 
-variable "aws_key_ecr_arn" {
-  type = string
-
-}
 
 variable "cloudwatch_key_arn" {
   type = string
@@ -58,20 +48,6 @@ variable "aws_account_id" {
 
 }
 
-variable "eks_role_arn" {
-  type = string
-
-}
-
-variable "flow_log_role_arn" {
-  type = string
-
-}
-
-variable "aws_iam_role_node_group_role_arn" {
-  type = string
-
-}
 
 variable "database_url" {
   type = string

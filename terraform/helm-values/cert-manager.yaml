@@ -5,7 +5,7 @@ serviceAccount:
   create: true
   name: cert-manager
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::499024813019:role/cert-manager
+    eks.amazonaws.com/role-arn: arn:aws:iam::241533156847:role/cert-manager
 
 
 cainjector:

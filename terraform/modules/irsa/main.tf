@@ -1,11 +1,15 @@
+locals {
+  oidc_issuer = replace(var.aws_eks_cluster_eks_cluster_identity_oidc_issuer, "https://", "")
+}
+
 module "cert_manager_irsa_role" {
-  #checkov:skip=CKV_AWS_1: 
+  #checkov:skip=CKV_AWS_1:
   version = "5.60.0"
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
   role_name                     = "cert-manager"
   attach_cert_manager_policy    = true
-  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z101674438AEID6T19NFK"]
+  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]
 
   oidc_providers = {
     eks = {
@@ -17,10 +21,10 @@ module "cert_manager_irsa_role" {
 }
 
 module "karpenter" {
-  #checkov:skip=CKV_AWS_1: 
+  #checkov:skip=CKV_AWS_1:
   source = "terraform-aws-modules/eks/aws//modules/karpenter"
   region = var.region
- 
+
 
   cluster_name = var.aws_eks_cluster
 
@@ -36,14 +40,14 @@ module "karpenter" {
 }
 
 module "external-dns" {
-  #checkov:skip=CKV_AWS_1: 
+  #checkov:skip=CKV_AWS_1:
   version = "5.60.0"
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
 
   role_name                     = "external-dns"
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z101674438AEID6T19NFK"]
+  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]
 
   oidc_providers = {
     eks = {
@@ -55,7 +59,7 @@ module "external-dns" {
 }
 
 module "aws-load-balancer-controller" {
-  #checkov:skip=CKV_AWS_1: 
+  #checkov:skip=CKV_AWS_1:
   version = "5.0.1"
   source = "lablabs/eks-load-balancer-controller/aws"
 
@@ -129,9 +133,9 @@ resource "aws_iam_role" "worker_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:worker-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:worker-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -153,8 +157,8 @@ data "aws_iam_policy_document" "worker_iam_policy_document" {
       "sqs:SendMessage"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }
@@ -189,9 +193,9 @@ resource "aws_iam_role" "order_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:order-service-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:order-service-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -208,8 +212,8 @@ data "aws_iam_policy_document" "order_iam_policy_document" {
       "sqs:SendMessage"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }
@@ -241,9 +245,9 @@ resource "aws_iam_role" "shipping_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:shipping-service-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:shipping-service-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -260,8 +264,8 @@ data "aws_iam_policy_document" "shipping_iam_policy_document" {
       "sqs:SendMessage"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }
@@ -293,9 +297,9 @@ resource "aws_iam_role" "payment_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:payment-service-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:payment-service-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -312,8 +316,8 @@ data "aws_iam_policy_document" "payment_iam_policy_document" {
       "sqs:SendMessage"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }
@@ -345,9 +349,9 @@ resource "aws_iam_role" "postgres_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:database-ns:postgres-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:database-ns:postgres-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -365,8 +369,8 @@ data "aws_iam_policy_document" "postgres_iam_policy_document" {
       "secretsmanager:DescribeSecret"
     ]
 
-    
-    resources = ["arn:aws:secretsmanager:eu-west-2:499024813019:secret:eks/postgres-M1JfQr"]
+
+    resources = ["arn:aws:secretsmanager:us-east-1:241533156847:secret:eks/postgres-*"]
   }
 
 }
@@ -398,9 +402,9 @@ resource "aws_iam_role" "database_api_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:dashboard-api-service-account"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:dashboard-api-service-account"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -418,8 +422,8 @@ data "aws_iam_policy_document" "aws_secret_iam_policy_document" {
       "secretsmanager:DescribeSecret"
     ]
 
-    
-    resources = ["arn:aws:secretsmanager:eu-west-2:499024813019:secret:database_url-4hCZDH"]
+
+    resources = ["arn:aws:secretsmanager:us-east-1:241533156847:secret:database_url-*"]
   }
 
 }
@@ -473,8 +477,8 @@ resource "aws_iam_role" "database_service_roles" {
 
       Condition = {
         StringEquals = {
-          "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:application-namespace:${each.value}"
-          "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"
+          "${local.oidc_issuer}:sub" = "system:serviceaccount:application-namespace:${each.value}"
+          "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
         }
       }
     }]
@@ -494,8 +498,8 @@ data "aws_iam_policy_document" "services_iam_policy_document" {
       "sqs:SendMessage"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }
@@ -517,9 +521,9 @@ resource "aws_iam_role" "keda_iam_role" {
 
         Condition = {
           StringEquals = {
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:sub" = "system:serviceaccount:kube-system:keda-operator"
-        "oidc.eks.eu-west-2.amazonaws.com/id/507F56E12A4EA46AD10B6AA97B90F722:aud" = "sts.amazonaws.com"               
-      }, 
+        "${local.oidc_issuer}:sub" = "system:serviceaccount:kube-system:keda-operator"
+        "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+      },
         }
       }
     ]
@@ -536,8 +540,8 @@ data "aws_iam_policy_document" "keda_iam_policy_document" {
       "sqs:GetQueueAttributes"
     ]
 
-    
-    resources = ["arn:aws:sqs:eu-west-2:499024813019:eks_sqs"]
+
+    resources = ["arn:aws:sqs:us-east-1:241533156847:eks_sqs"]
   }
 
 }

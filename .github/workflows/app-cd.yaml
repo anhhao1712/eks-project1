@@ -11,13 +11,13 @@ on:
       - completed
     branches:
       - main
-  
+
   workflow_dispatch:
 
 permissions:
   id-token: write
   contents: write
-  
+
 
 jobs:
 
@@ -59,7 +59,7 @@ jobs:
             - worker
 
     steps:
-              
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -68,8 +68,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-           role-to-assume: arn:aws:iam::499024813019:role/githubs-action-EcrPushRole
-           aws-region: eu-west-2
+           role-to-assume: arn:aws:iam::241533156847:role/github-actions-ecr
+           aws-region: us-east-1
 
       - name: login to amazon ecr
         id: login-ecr
@@ -79,34 +79,34 @@ jobs:
 
         run: |
               docker build \
-               -t 499024813019.dkr.ecr.eu-west-2.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \
+               -t 241533156847.dkr.ecr.us-east-1.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \
                ./services/${{ matrix.service }}
 
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: '499024813019.dkr.ecr.eu-west-2.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }}'
+          image-ref: '241533156847.dkr.ecr.us-east-1.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-          
-        
+
+
 
       - name: push docker image
         run: |
               docker push \
-              499024813019.dkr.ecr.eu-west-2.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \       
+              241533156847.dkr.ecr.us-east-1.amazonaws.com/${{ matrix.service }}:${{ needs.prepare.outputs.image_tag }} \
 
   update-manifests:
     needs:
       - prepare
       - build-push-docker-images
-    runs-on: ubuntu-latest  
- 
+    runs-on: ubuntu-latest
+
     outputs:
       manifest_commit_sha: ${{ steps.manifest_commit.outputs.commit_sha }}
 
@@ -116,9 +116,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: main
-  
 
-    - name: Update the image tag in the relevant Kubernetes Deployment manifest. 
+
+    - name: Update the image tag in the relevant Kubernetes Deployment manifest.
       uses: Charlyzzz/update-k8s-image@v1.7.1
       with:
         manifest-path: kubernetes/application/api-gateway/deployment.yaml
@@ -171,7 +171,7 @@ jobs:
       with:
         manifest-path: kubernetes/application/scheduler/deployment.yaml
         new-image-tag: ${{ needs.prepare.outputs.image_tag }}
-        container-name: scheduler 
+        container-name: scheduler
 
     - name: Update the image tag in the relevant Kubernetes Deployment manifest.
       uses: Charlyzzz/update-k8s-image@v1.7.1
@@ -190,8 +190,8 @@ jobs:
     - name: setting up gitHub then creating git commit and pushing it to gitHub
       id: manifest_commit
       run: |
-          git config --global user.email "zakariya.a4458@gmail.com"
-          git config --global user.name "zakariyaa4458"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
           git add kubernetes/
           git commit -m "new commits for updated manifests"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -206,18 +206,18 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::499024813019:role/github-eks-rollout
-        aws-region: eu-west-2
+        role-to-assume: arn:aws:iam::241533156847:role/github-actions-eks-deploy
+        aws-region: us-east-1
 
     - name: Configure kubectl
       run: |
          aws eks update-kubeconfig \
-         --region eu-west-2 \
+         --region us-east-1 \
          --name eks-cluster
 
     - name: Wait for ArgoCD
       run: sleep 45
-  
+
     - name: Verify rollout
       id: rollout
       continue-on-error: true
@@ -241,8 +241,8 @@ jobs:
     - name: Configure Git
       if: steps.rollout.outcome == 'failure'
       run: |
-          git config user.email "zakariya.a4458@gmail.com"
-          git config user.name "zakariyaa4458"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
 
     - name: Rollback failed deployment
       if: steps.rollout.outcome == 'failure'

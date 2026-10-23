@@ -86,7 +86,7 @@ resource "aws_iam_role" "flow_log_role" {
         Effect = "Allow"
         Sid    = ""
         Principal = {
-          Service = "eks.amazonaws.com"
+          Service = "vpc-flow-logs.amazonaws.com"
         }
       },
     ]
@@ -108,7 +108,7 @@ data "aws_iam_policy_document" "flow_log_policy_document" {
     ]
 
     #resources = aws_iam_role.flow_log_role.managed_policy_arns
-    resources = [var.aws_cloudwatch_log_group_flow_log_group]
+    resources = ["arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:flow-log-cloudwatch-group:*"]
   }
 
   statement {

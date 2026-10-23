@@ -3,19 +3,26 @@ kind: Ingress
 metadata:
   name: api-gateway-ingress
   namespace: application-namespace
-  annotations: 
-    cert-manager.io/cluster-issuer: issuer
 spec:
-  tls:
-  - hosts:
-      - api.ecommerce.zakariyaalab.com
-    secretName: api-gateway-tls
   rules:
-  - host: "api.ecommerce.zakariyaalab.com"
-    http:
+  - http:
       paths:
       - pathType: Prefix
-        path: "/"
+        path: "/api"
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/auth"
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 80
+      - pathType: Prefix
+        path: "/healthz"
         backend:
           service:
             name: api-gateway-service
