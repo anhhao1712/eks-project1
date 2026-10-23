@@ -110,6 +110,7 @@ jobs:
 
     outputs:
       manifest_commit_sha: ${{ steps.manifest_commit.outputs.commit_sha }}
+      image_tag: ${{ needs.prepare.outputs.image_tag }}
 
     steps:
 
@@ -216,22 +217,58 @@ jobs:
          --region us-east-1 \
          --name eks-cluster
 
-    - name: Wait for ArgoCD
-      run: sleep 45
-
-    - name: Verify rollout
+    - name: Wait for Argo CD sync and verify rollout
       id: rollout
       continue-on-error: true
+      env:
+        IMAGE_TAG: ${{ needs.update-manifests.outputs.image_tag }}
       run: |
-            kubectl rollout status deployment/api-gateway-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/dashboard-api-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/inventory-service-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/notification-service-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/order-service-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/payment-service-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/scheduler-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/shipping-service-deployment -n application-namespace --timeout=3m
-            kubectl rollout status deployment/worker-deployment -n application-namespace --timeout=3m
+            set -euo pipefail
+
+            services=(
+              "api-gateway:api-gateway-deployment"
+              "dashboard-api:dashboard-api-deployment"
+              "inventory-service:inventory-service-deployment"
+              "notification-service:notification-service-deployment"
+              "order-service:order-service-deployment"
+              "payment-service:payment-service-deployment"
+              "scheduler:scheduler-deployment"
+              "shipping-service:shipping-service-deployment"
+              "worker:worker-deployment"
+            )
+
+            echo "Waiting for Argo CD to apply image tag ${IMAGE_TAG}..."
+            synced=false
+            for attempt in $(seq 1 60); do
+              synced=true
+              for item in "${services[@]}"; do
+                service="${item%%:*}"
+                deployment="${item#*:}"
+                expected="241533156847.dkr.ecr.us-east-1.amazonaws.com/${service}:${IMAGE_TAG}"
+                actual="$(kubectl get deployment "${deployment}" -n application-namespace -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+                if [[ "${actual}" != "${expected}" ]]; then
+                  synced=false
+                  break
+                fi
+              done
+
+              if [[ "${synced}" == "true" ]]; then
+                break
+              fi
+
+              echo "Argo CD has not applied all images yet (attempt ${attempt}/60)."
+              sleep 10
+            done
+
+            if [[ "${synced}" != "true" ]]; then
+              echo "Timed out waiting for Argo CD to apply the new image tag."
+              exit 1
+            fi
+
+            for item in "${services[@]}"; do
+              deployment="${item#*:}"
+              kubectl rollout status "deployment/${deployment}" -n application-namespace --timeout=5m
+            done
 
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -250,3 +287,7 @@ jobs:
       run: |
             git revert --no-edit ${{ needs.update-manifests.outputs.manifest_commit_sha }}
             git push origin main
+
+    - name: Mark workflow failed when rollout fails
+      if: steps.rollout.outcome == 'failure'
+      run: exit 1
