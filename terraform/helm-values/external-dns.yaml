@@ -9,7 +9,7 @@ serviceAccount:
   create: true
   name: external-dns
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::241533156847:role/external-dns
+    eks.amazonaws.com/role-arn: arn:aws:iam::241533156847:role/eks-project1-external-dns
 
 
 domainFilters: []

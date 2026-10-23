@@ -36,7 +36,7 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  role: KarpenterNodeRole-eks-cluster
+  role: eks-project1-KarpenterNodeRole-eks-cluster
   kubelet:
     # podsPerCore: 8
     # maxPods: 25

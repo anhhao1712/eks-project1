@@ -1,5 +1,5 @@
 resource "aws_iam_role" "eks-role" {
-  name = "eks-role"
+  name = "eks-project1-eks-role"
 
 
   # Terraform's "jsonencode" function converts a
@@ -25,7 +25,7 @@ resource "aws_iam_role" "eks-role" {
 
 
 resource "aws_iam_role" "node-group-role" {
-  name = "eks-node-group-role"
+  name = "eks-project1-eks-node-group-role"
 
 
   # Terraform's "jsonencode" function converts a
@@ -72,7 +72,7 @@ resource "aws_iam_role_policy_attachment" "AmazonEKS_CNI_Policy" {
 }
 
 resource "aws_iam_role" "flow_log_role" {
-  name = "flow-log-role"
+  name = "eks-project1-flow-log-role"
   #arn = "arn:aws:iam::${var.aws_account_id}:role/flow-log-role"
 
 
@@ -121,13 +121,13 @@ data "aws_iam_policy_document" "flow_log_policy_document" {
 }
 
 resource "aws_iam_role_policy" "flow_log_policy" {
-  name   = "flow-log-policy"
+  name   = "eks-project1-flow-log-policy"
   role   = aws_iam_role.flow_log_role.id
   policy = data.aws_iam_policy_document.flow_log_policy_document.json
 }
 
 resource "aws_iam_role" "karpenter_node_role" {
-  name = "KarpenterNodeRole-eks-cluster"
+  name = "eks-project1-KarpenterNodeRole-eks-cluster"
 
 
   # Terraform's "jsonencode" function converts a
