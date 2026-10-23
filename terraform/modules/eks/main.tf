@@ -83,7 +83,7 @@ resource "aws_iam_openid_connect_provider" "default" {
 }
 
 resource "aws_launch_template" "eks_launch_template" {
-  name   = "eks-launch-template"
+  name   = "eks-project1-launch-template"
   region = var.region
 
   metadata_options {
