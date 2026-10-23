@@ -36,6 +36,16 @@ jobs:
             role-to-assume: arn:aws:iam::241533156847:role/github-actions-terraform
             aws-region: us-east-1
 
+        - name: Setup Helm CLI
+          uses: azure/setup-helm@v4
+          with:
+            version: v3.17.3
+
+        - name: Authenticate to AWS Public ECR
+          run: |
+            aws ecr-public get-login-password --region us-east-1 |
+              helm registry login public.ecr.aws --username AWS --password-stdin
+
         - name: Sts GetCallerIdentity
           run: |
               aws sts get-caller-identity
@@ -149,6 +159,16 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::241533156847:role/github-actions-terraform
           aws-region: us-east-1
+
+      - name: Setup Helm CLI
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+
+      - name: Authenticate to AWS Public ECR
+        run: |
+          aws ecr-public get-login-password --region us-east-1 |
+            helm registry login public.ecr.aws --username AWS --password-stdin
   
 
       - name: terraform setup
