@@ -36,7 +36,7 @@ spec:
       containers:
         - name: payment-service
           image: >-
-            241533156847.dkr.ecr.us-east-1.amazonaws.com/payment-service:3f79caed9579e7b8752e7bc8721bbff915afd790-6
+            241533156847.dkr.ecr.us-east-1.amazonaws.com/payment-service:c79cf0316c65a0c431e1c78541e8200aa0b11f61-131
           imagePullPolicy: Always
           securityContext:
             runAsNonRoot: true
