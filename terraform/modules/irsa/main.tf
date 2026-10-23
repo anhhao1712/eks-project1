@@ -493,6 +493,13 @@ resource "aws_iam_policy" "services_iam_policy" {
   policy = data.aws_iam_policy_document.services_iam_policy_document.json
 }
 
+resource "aws_iam_role_policy_attachment" "services_iam_policy_attachments" {
+  for_each = toset(["order", "payment", "shipping"])
+
+  role       = aws_iam_role.database_service_roles[each.value].name
+  policy_arn = aws_iam_policy.services_iam_policy.arn
+}
+
 data "aws_iam_policy_document" "services_iam_policy_document" {
   statement {
     effect = "Allow"
