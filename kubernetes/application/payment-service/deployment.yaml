@@ -58,8 +58,8 @@ spec:
           envFrom:
             - secretRef:
                 name: application-secret
-            - secretRef:
-                name: application-secret-sqs
+            - configMapRef:
+                name: application-sqs-config
           resources:
             requests:
               memory: 128Mi
