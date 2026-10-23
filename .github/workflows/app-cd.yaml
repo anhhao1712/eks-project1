@@ -23,6 +23,7 @@ jobs:
 
   prepare:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_commit.message != 'new commits for updated manifests' }}
 
     outputs:
       image_tag: ${{ steps.tag.outputs.image_tag }}
