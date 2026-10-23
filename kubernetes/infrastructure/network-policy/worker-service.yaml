@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: worker-to-services-network-policy
+  name: worker-to-order-service-network-policy
   namespace: application-namespace
 spec:
   podSelector:
@@ -24,7 +24,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: worker-to-services-network-policy
+  name: worker-to-inventory-service-network-policy
   namespace: application-namespace
 spec:
   podSelector:
@@ -46,7 +46,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: worker-to-services-network-policy
+  name: worker-to-payment-service-network-policy
   namespace: application-namespace
 spec:
   podSelector:
@@ -68,7 +68,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: worker-to-services-network-policy
+  name: worker-to-notification-service-network-policy
   namespace: application-namespace
 spec:
   podSelector:
@@ -91,7 +91,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: worker-to-services-network-policy
+  name: worker-to-shipping-service-network-policy
   namespace: application-namespace
 spec:
   podSelector:
